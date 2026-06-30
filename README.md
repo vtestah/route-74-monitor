@@ -1,5 +1,9 @@
 # Route 74 Monitor
 
+[![CI](https://github.com/vtestah/route-74-monitor/actions/workflows/ci.yml/badge.svg)](https://github.com/vtestah/route-74-monitor/actions/workflows/ci.yml)
+[![Release](https://github.com/vtestah/route-74-monitor/actions/workflows/release.yml/badge.svg)](https://github.com/vtestah/route-74-monitor/actions/workflows/release.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A small personal web app for one question: when do I leave to catch minibus route 74 in Novosibirsk? It reads a live ETA from Yandex Maps, falls back to local Yandex history, and shows "no ETA" honestly when there is no signal.
 
 ## Stack
