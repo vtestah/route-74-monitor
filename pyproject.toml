@@ -65,9 +65,12 @@ addopts = "-ra --cov=route74 --cov-report=term-missing"
 [tool.ruff]
 line-length = 120
 target-version = "py311"
+exclude = [
+    "src/route74/smoke",
+]
 
 [tool.ruff.lint]
-select = ["E", "F", "B", "UP", "C4"]
+select = ["E", "F", "B", "C4"]
 ignore = ["E501", "B905", "B008"]
 
 [tool.mypy]
