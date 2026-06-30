@@ -1014,7 +1014,10 @@ def _assert_dashboard_surfaces_runtime_prediction_change() -> None:
 
 def _seed(db_path: Path) -> None:
     forecast = FakeYandexSource().get_forecast()
-    base = datetime(2026, 6, 4, 9, 10, tzinfo=NOVOSIBIRSK_TZ)
+    today = now_local()
+    days_since_thursday = (today.weekday() - 3) % 7
+    thursday = today - timedelta(days=days_since_thursday + 7)
+    base = thursday.replace(hour=9, minute=10, second=0, microsecond=0)
     with connect(db_path) as connection:
         init_db(connection)
         update_collector_heartbeat(
