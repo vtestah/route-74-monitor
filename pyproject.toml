@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "route74-monitor"
+version = "0.1.0"
+description = "Collector and analyzer for Novosibirsk minibus route 74 telemetry."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{name = "Vladimir"}]
+keywords = ["web-app", "public-transport", "novosibirsk", "route74", "pushover"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: End Users/Desktop",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "fastapi>=0.115,<1",
+    "httpx>=0.27,<1",
+    "pydantic>=2.7,<3",
+    "uvicorn[standard]>=0.30,<1",
+]
+
+[project.optional-dependencies]
+dashboard = [
+]
+dev = [
+    "build>=1.2,<2",
+    "twine>=5,<7",
+]
+test = [
+    "pytest>=8,<9",
+]
+yandex = [
+    "playwright>=1.45,<2",
+]
+
+[project.scripts]
+route74 = "route74.cli:main"
+route74-web = "route74.web.runtime:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+zip-safe = false
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["route74*"]
+
+[tool.setuptools.package-data]
+route74 = ["py.typed", "web/static/*.html", "dashboard/static/*.html", "dashboard/static/*.svg"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
