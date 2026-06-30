@@ -1,0 +1,18 @@
+[Unit]
+Description=Route74 Yandex telemetry collector
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=route74
+Group=route74
+WorkingDirectory=/opt/route74
+Environment=ROUTE74_ENV_FILE=/opt/route74/.env
+Environment=ROUTE74_PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/google-chrome
+ExecStart=/opt/route74/.venv/bin/route74 --db /opt/route74/data/route74.sqlite yandex-collect --profile all --interval 30 --forever --report-windows-only --lock-file /opt/route74/data/yandex-collect.lock --retention-days 30
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Route74 SQLite database backup daily
+
+[Timer]
+OnCalendar=*-*-* 03:17:00
+Persistent=true
+RandomizedDelaySec=10m
+Unit=route74-db-backup.service
+
+[Install]
+WantedBy=timers.target

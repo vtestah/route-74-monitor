@@ -1,0 +1,11 @@
+[Unit]
+Description=Route74 SQLite database backup
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=route74
+Group=route74
+WorkingDirectory=/opt/route74
+ExecStart=/opt/route74/.venv/bin/route74 --db /opt/route74/data/route74.sqlite db-backup --keep 14

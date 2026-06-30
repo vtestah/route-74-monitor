@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8074:8074"
+    environment:
+      - ROUTE74_WEB_HOST=0.0.0.0
+      - ROUTE74_WEB_PORT=8074
+      - ROUTE74_WEB_ALLOW_PUBLIC=1
+      - ROUTE74_DB_PATH=/app/data/route74.sqlite
+      - ROUTE74_WEB_WATCH_STATE_PATH=/app/data/web_watches.json
+    volumes:
+      - ./data:/app/data
+    restart: always

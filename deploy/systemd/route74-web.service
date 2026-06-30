@@ -1,0 +1,17 @@
+[Unit]
+Description=Route74 web app
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=route74
+Group=route74
+WorkingDirectory=/opt/route74
+Environment=ROUTE74_ENV_FILE=/opt/route74/.env
+ExecStart=/opt/route74/.venv/bin/route74-web
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
