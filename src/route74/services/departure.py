@@ -11,16 +11,12 @@ from route74.domain.commute import (
     DepartureUrgency,
 )
 from route74.domain.departure_policy import (
-    EVENING_AUTO_END,
-    EVENING_AUTO_START,
     GET_READY_THRESHOLD_MINUTES,
     GO_NOW_THRESHOLD_MINUTES,
-    MORNING_AUTO_END,
-    MORNING_AUTO_START,
     validate_departure_thresholds,
 )
-from route74.domain.eta import EtaConsensus, EtaSource
 from route74.domain.departure_safety import unsafe_arrival_without_safe_margin
+from route74.domain.eta import EtaConsensus, EtaSource
 from route74.domain.profile_registry import profile_for_time
 from route74.domain.profiles import PROFILES
 from route74.models import require_local_datetime

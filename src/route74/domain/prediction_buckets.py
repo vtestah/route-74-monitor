@@ -15,10 +15,7 @@ class PredictionEtaBucket:
             raise ValueError("prediction ETA bucket max needs non-negative minutes or None")
         if _invalid_int(self.accuracy_tolerance_minutes):
             raise ValueError("prediction ETA bucket tolerance needs non-negative minutes")
-        if (
-            self.max_minutes is not None
-            and self.accuracy_tolerance_minutes > self.max_minutes
-        ):
+        if self.max_minutes is not None and self.accuracy_tolerance_minutes > self.max_minutes:
             raise ValueError("prediction ETA bucket tolerance must not exceed finite bucket max")
 
     def contains(self, minutes: int) -> bool:
@@ -42,9 +39,7 @@ def _validate_bucket_label(label: str) -> None:
         raise ValueError("prediction ETA bucket label is required")
     if label != label.strip() or any(char.isspace() for char in label):
         raise ValueError("prediction ETA bucket label must be compact")
-    if not label.isascii() or any(
-        not (char.isalnum() or char in {"_", "-", "+"}) for char in label
-    ):
+    if not label.isascii() or any(not (char.isalnum() or char in {"_", "-", "+"}) for char in label):
         raise ValueError("prediction ETA bucket label must be an ASCII key")
 
 

@@ -11,9 +11,9 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
+from route74.reporting_smoke_fixtures import FakeYandexSource, fake_traffic_source
 
 from route74.models import NOVOSIBIRSK_TZ
-from route74.reporting_smoke_fixtures import FakeYandexSource, fake_traffic_source
 from route74.sources.yandex.models import YandexLiveForecast
 from route74.storage import RouteTrafficSnapshot, connect, init_db
 

@@ -5,7 +5,6 @@ from urllib.parse import parse_qs, urlencode
 
 from route74.domain.commute import CommuteProfile
 
-
 YANDEX_LINE_ID = "65_74_minibus_novosibirskgortrans"
 YANDEX_ROUTE_74_ID = (
     "796d617073626d313a2f2f7472616e7369742f6c696e653f69643d36355f37345f"
@@ -18,10 +17,7 @@ YANDEX_VEHICLES_URL = "https://yandex.ru/maps/api/masstransit/getVehiclesInfoWit
 YANDEX_STOP_INFO_URL = "https://yandex.ru/maps/api/masstransit/getStopInfo"
 YANDEX_VEHICLE_PREDICTION_URL = "https://yandex.ru/maps/api/masstransit/getVehiclePredictionInfo"
 YANDEX_LINE_URL = "https://yandex.ru/maps/api/masstransit/getLine"
-YANDEX_USER_AGENT = (
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/125.0 Safari/537.36"
-)
+YANDEX_USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36"
 # stopInfo opens a stop page, prediction stops are matched inside
 # getVehiclePredictionInfo, and expected threads validate direction.
 STOP_ID_BY_PROFILE = {
@@ -97,7 +93,9 @@ def route_traffic_url(profile: CommuteProfile) -> str:
     return f"https://yandex.ru/maps/65/novosibirsk/?{params}"
 
 
-def route_traffic_points(profile: CommuteProfile) -> tuple[YandexRoutePoint, YandexRoutePoint]:
+def route_traffic_points(
+    profile: CommuteProfile,
+) -> tuple[YandexRoutePoint, YandexRoutePoint]:
     return ROUTE_TRAFFIC_POINTS_BY_PROFILE.get(profile.key, ROUTE_TRAFFIC_POINTS_BY_PROFILE["morning"])
 
 

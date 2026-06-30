@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from math import isfinite
 import re
+from math import isfinite
 from typing import Any
 
 import httpx
@@ -15,7 +15,6 @@ from route74.sources.yandex.constants import (
     viewport_params,
 )
 from route74.sources.yandex.models import YandexRawResponse, YandexSourceStatus
-
 
 CSRF_PATTERNS = (
     re.compile(r'"csrfToken"\s*:\s*"([^"]+)"'),
@@ -50,7 +49,7 @@ class YandexHttpClient:
     def close(self) -> None:
         self._client.close()
 
-    def __enter__(self) -> "YandexHttpClient":
+    def __enter__(self) -> YandexHttpClient:
         return self
 
     def __exit__(self, *_exc: object) -> None:

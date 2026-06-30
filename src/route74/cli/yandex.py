@@ -37,7 +37,12 @@ def register_yandex_commands(subparsers: argparse._SubParsersAction) -> None:
     yandex_dump.set_defaults(func=cmd_yandex_dump)
 
     yandex_line = subparsers.add_parser("yandex-line", help="Summarize getLine payloads from a Yandex dump.")
-    yandex_line.add_argument("--dump", type=Path, required=True, help="JSON file created by route74 yandex-dump.")
+    yandex_line.add_argument(
+        "--dump",
+        type=Path,
+        required=True,
+        help="JSON file created by route74 yandex-dump.",
+    )
     yandex_line.add_argument(
         "--save-profile",
         choices=PROFILE_KEYS,
@@ -49,11 +54,21 @@ def register_yandex_commands(subparsers: argparse._SubParsersAction) -> None:
     yandex_collect = subparsers.add_parser("yandex-collect", help="Collect Yandex telemetry snapshots.")
     yandex_collect.add_argument("--profile", choices=PROFILE_SELECTORS, default=ALL_PROFILES_KEY)
     yandex_collect.add_argument("--minutes", type=positive_float, default=60.0, help="Collection duration.")
-    yandex_collect.add_argument("--interval", type=positive_float, default=30.0, help="Sampling interval in seconds.")
+    yandex_collect.add_argument(
+        "--interval",
+        type=positive_float,
+        default=30.0,
+        help="Sampling interval in seconds.",
+    )
     yandex_collect.add_argument("--once", action="store_true", help="Store one snapshot and exit.")
     yandex_collect.add_argument("--forever", action="store_true", help="Run until interrupted.")
     yandex_collect.add_argument("--mode", choices=[item.value for item in YandexSourceMode], default="auto")
-    yandex_collect.add_argument("--timeout", type=positive_float, default=8.0, help="Yandex request/browser timeout seconds.")
+    yandex_collect.add_argument(
+        "--timeout",
+        type=positive_float,
+        default=8.0,
+        help="Yandex request/browser timeout seconds.",
+    )
     yandex_collect.add_argument(
         "--traffic-mode",
         choices=["browser", "off"],
@@ -62,7 +77,12 @@ def register_yandex_commands(subparsers: argparse._SubParsersAction) -> None:
     )
     yandex_collect.add_argument("--lock-file", type=Path, default=None, help="Collector lock file path.")
     yandex_collect.add_argument("--heartbeat-name", default="yandex-collect", help="SQLite heartbeat name.")
-    yandex_collect.add_argument("--retention-days", type=positive_int, default=30, help="Telemetry retention in days.")
+    yandex_collect.add_argument(
+        "--retention-days",
+        type=positive_int,
+        default=30,
+        help="Telemetry retention in days.",
+    )
     yandex_collect.add_argument(
         "--report-windows-only",
         action="store_true",
@@ -73,9 +93,18 @@ def register_yandex_commands(subparsers: argparse._SubParsersAction) -> None:
     yandex_canary = subparsers.add_parser("yandex-canary", help="Run a Yandex parser/API contract canary.")
     yandex_canary.add_argument("--profile", choices=PROFILE_SELECTORS, default=ALL_PROFILES_KEY)
     yandex_canary.add_argument("--mode", choices=[item.value for item in YandexSourceMode], default="auto")
-    yandex_canary.add_argument("--timeout", type=positive_float, default=8.0, help="Yandex request/browser timeout seconds.")
+    yandex_canary.add_argument(
+        "--timeout",
+        type=positive_float,
+        default=8.0,
+        help="Yandex request/browser timeout seconds.",
+    )
     yandex_canary.add_argument("--once", action="store_true", help="Compatibility flag; canary runs once.")
-    yandex_canary.add_argument("--strict", action="store_true", help="Exit non-zero when any canary run is warning.")
+    yandex_canary.add_argument(
+        "--strict",
+        action="store_true",
+        help="Exit non-zero when any canary run is warning.",
+    )
     yandex_canary.set_defaults(func=cmd_yandex_canary)
 
 

@@ -24,7 +24,6 @@ from route74.diagnostics import sanitize_diagnostic_text
 from route74.storage import DEFAULT_DB, summarize_db_health_readonly
 from route74.watch_state import DEFAULT_WATCH_STATE_PATH
 
-
 HTTP_ERROR_DETAIL_LIMIT = 160
 
 
@@ -39,9 +38,7 @@ def create_app(
     app.state.db_path = Path(db_path)
     app.state.watch_state_path = Path(watch_state_path)
     app.state.preview_cache_path = (
-        Path(preview_cache_path)
-        if preview_cache_path is not None
-        else dashboard_preview_cache_dir(app.state.db_path)
+        Path(preview_cache_path) if preview_cache_path is not None else dashboard_preview_cache_dir(app.state.db_path)
     )
     app.state.preview_capture_fn = preview_capture_fn
 

@@ -5,7 +5,6 @@ from pathlib import Path
 
 from route74.env import DEFAULT_ENV_PATH, ENV_FILE, env_value, load_env_file
 
-
 ENV_PUSHOVER_APP_TOKEN = "PUSHOVER_APP_TOKEN"
 ENV_PUSHOVER_USER_KEY = "PUSHOVER_USER_KEY"
 

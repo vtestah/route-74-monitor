@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from route74.domain.profiles import EVENING, MORNING
 
-
 MORNING_AUTO_START = MORNING.window_start
 MORNING_AUTO_END = MORNING.window_end
 EVENING_AUTO_START = EVENING.window_start

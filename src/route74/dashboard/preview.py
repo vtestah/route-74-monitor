@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Callable
 
 from route74.diagnostics import sanitize_diagnostic_text
 from route74.domain.commute import CommuteProfile
@@ -14,7 +14,6 @@ from route74.models import now_local
 from route74.sources.yandex.browser_client import launch_chromium
 from route74.sources.yandex.browser_rate_limit import run_with_browser_slot
 from route74.sources.yandex.constants import YANDEX_USER_AGENT, route_map_url
-
 
 PREVIEW_DIRNAME = "dashboard-previews"
 PREVIEW_IMAGE_NAME = "map.png"
@@ -224,7 +223,7 @@ def _dt(value: datetime) -> str:
 
 def _close_page(page: object) -> None:
     try:
-        close = getattr(page, "close")
+        close = page.close
     except Exception as exc:
         LOGGER.debug(
             "dashboard preview page close unavailable: %s",

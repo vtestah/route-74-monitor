@@ -4,8 +4,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from math import isfinite
 
-from route74.domain.traffic import RouteTrafficSnapshot
-
 
 @dataclass(frozen=True)
 class YandexObservation:

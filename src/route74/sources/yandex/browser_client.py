@@ -9,12 +9,16 @@ from urllib.parse import parse_qs, urlparse
 
 from route74.domain.commute import CommuteProfile
 from route74.sources.yandex.browser_rate_limit import run_with_browser_slot
-from route74.sources.yandex.constants import YANDEX_USER_AGENT, expected_thread_ids, route_map_url, stop_map_url
+from route74.sources.yandex.constants import (
+    YANDEX_USER_AGENT,
+    expected_thread_ids,
+    route_map_url,
+    stop_map_url,
+)
 from route74.sources.yandex.models import YandexRawResponse, YandexSourceStatus
 from route74.sources.yandex.parser.containers import find_vehicles
 from route74.sources.yandex.parser.coordinates import coordinates
 from route74.sources.yandex.parser.vehicle import thread_id, vehicle_id
-
 
 CHROMIUM_EXECUTABLE_ENV = "ROUTE74_PLAYWRIGHT_CHROMIUM_EXECUTABLE"
 

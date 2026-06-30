@@ -111,10 +111,7 @@ class EtaExplanation:
             raise ValueError("ETA explanation action needs EtaExplanationAction")
         if not isinstance(self.detail, str):
             raise ValueError("ETA explanation detail needs text")
-        if (
-            len(self.detail) > MAX_ETA_EXPLANATION_DETAIL_LENGTH
-            or self.detail != " ".join(self.detail.split())
-        ):
+        if len(self.detail) > MAX_ETA_EXPLANATION_DETAIL_LENGTH or self.detail != " ".join(self.detail.split()):
             raise ValueError("ETA explanation detail needs compact single-line text")
 
 
@@ -179,7 +176,7 @@ class EtaConsensus:
             raise ValueError("ETA consensus selected source needs known confidence")
 
     @classmethod
-    def disabled(cls) -> "EtaConsensus":
+    def disabled(cls) -> EtaConsensus:
         return cls(
             selected_source=None,
             arrival_minutes=None,

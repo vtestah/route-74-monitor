@@ -29,7 +29,11 @@ def register_forecast_backtest_command(subparsers: argparse._SubParsersAction) -
     backtest.add_argument("--min-samples", type=positive_int, default=DEFAULT_MIN_OBSERVATIONS)
     backtest.add_argument("--min-days", type=positive_int, default=DEFAULT_MIN_HISTORY_DAYS)
     backtest.add_argument("--max-age-seconds", type=positive_int, default=DEFAULT_HISTORY_MAX_AGE_SECONDS)
-    backtest.add_argument("--percentiles", type=_percentiles, default=DEFAULT_FORECAST_BACKTEST_PERCENTILES)
+    backtest.add_argument(
+        "--percentiles",
+        type=_percentiles,
+        default=DEFAULT_FORECAST_BACKTEST_PERCENTILES,
+    )
     backtest.set_defaults(func=cmd_forecast_backtest)
 
 

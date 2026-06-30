@@ -10,7 +10,11 @@ from pathlib import Path
 from route74.domain.commute import CommuteProfile
 from route74.domain.reporting import report_profiles_for_time
 from route74.models import now_local
-from route74.sources.yandex.constants import expected_thread_ids, prediction_stop_ids, stop_id
+from route74.sources.yandex.constants import (
+    expected_thread_ids,
+    prediction_stop_ids,
+    stop_id,
+)
 from route74.sources.yandex.line import YandexLineTopology
 from route74.sources.yandex.models import YandexLiveForecast, YandexSourceStatus
 from route74.sources.yandex.transport import YandexTransportSource
@@ -109,7 +113,10 @@ class YandexTelemetryCollector:
             if not profiles:
                 skip_message = self._skip_message(sampled_at)
                 if self._retention_days > 0:
-                    prune_yandex_telemetry(connection, older_than=sampled_at - timedelta(days=self._retention_days))
+                    prune_yandex_telemetry(
+                        connection,
+                        older_than=sampled_at - timedelta(days=self._retention_days),
+                    )
                     prune_collector_runs(
                         connection,
                         older_than=sampled_at - timedelta(days=self._retention_days),
@@ -153,10 +160,20 @@ class YandexTelemetryCollector:
                     _prediction_lab_counts(connection),
                 )
                 results.append(
-                    _result(profile, forecast, traffic, route_geometry, connection, prediction_lab)
+                    _result(
+                        profile,
+                        forecast,
+                        traffic,
+                        route_geometry,
+                        connection,
+                        prediction_lab,
+                    )
                 )
             if self._retention_days > 0:
-                prune_yandex_telemetry(connection, older_than=sampled_at - timedelta(days=self._retention_days))
+                prune_yandex_telemetry(
+                    connection,
+                    older_than=sampled_at - timedelta(days=self._retention_days),
+                )
                 prune_collector_runs(
                     connection,
                     older_than=sampled_at - timedelta(days=self._retention_days),
@@ -252,7 +269,12 @@ class YandexTelemetryCollector:
                 )
                 return RouteGeometryRefresh("saved", inspection.reason)
             except ValueError as error:
-                rejected.append(RouteGeometryRefresh("no_target_stop", _error_reason("route_geometry_rejected", error)))
+                rejected.append(
+                    RouteGeometryRefresh(
+                        "no_target_stop",
+                        _error_reason("route_geometry_rejected", error),
+                    )
+                )
         return _best_route_geometry_rejection(tuple(rejected))
 
     def _touch_route_geometry(
@@ -421,7 +443,9 @@ def _inspect_route_geometry_topology(
     return RouteGeometryRefresh("ok", reason)
 
 
-def _best_route_geometry_rejection(rejections: tuple[RouteGeometryRefresh, ...]) -> RouteGeometryRefresh:
+def _best_route_geometry_rejection(
+    rejections: tuple[RouteGeometryRefresh, ...],
+) -> RouteGeometryRefresh:
     if not rejections:
         return RouteGeometryRefresh("not_found")
     priority = {"thread_drift": 0, "no_target_stop": 1}
@@ -478,11 +502,7 @@ def _prediction_lab_delta(
 
 
 def _prediction_lab_message(result: YandexTelemetryResult) -> str:
-    return (
-        f"p{result.prediction_events_created}/"
-        f"a{result.arrival_events_created}/"
-        f"e{result.evaluations_created}"
-    )
+    return f"p{result.prediction_events_created}/a{result.arrival_events_created}/e{result.evaluations_created}"
 
 
 def _compact_reason(value: str, *, limit: int = 200) -> str:

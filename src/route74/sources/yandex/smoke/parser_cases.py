@@ -5,7 +5,11 @@ from datetime import datetime, timedelta
 from route74.domain.eta import EtaConfidence
 from route74.domain.profiles import EVENING
 from route74.models import NOVOSIBIRSK_TZ
-from route74.sources.yandex.models import YandexSourceMethod, YandexSourceStatus, YandexVehicle
+from route74.sources.yandex.models import (
+    YandexSourceMethod,
+    YandexSourceStatus,
+    YandexVehicle,
+)
 from route74.sources.yandex.parser import parse_vehicles_payload
 from route74.sources.yandex.parser.route_vehicles import (
     confidence_for_age,
@@ -21,7 +25,13 @@ def run_vehicle_parser_smoke(current_time: datetime) -> None:
         {
             "data": {
                 "vehicles": [
-                    {"id": "a", "lat": 54.9, "lng": 83.1, "arrivalMinutes": 7, "ageSeconds": 20},
+                    {
+                        "id": "a",
+                        "lat": 54.9,
+                        "lng": 83.1,
+                        "arrivalMinutes": 7,
+                        "ageSeconds": 20,
+                    },
                     {"id": "b", "lat": 54.8, "lng": 83.0, "eta": 15, "ageSeconds": 70},
                 ]
             }
@@ -96,11 +106,19 @@ def run_vehicle_parser_smoke(current_time: datetime) -> None:
 
     _run_nested_vehicle_smoke(current_time)
     _run_route_vehicle_age_guard_smoke()
-    empty = parse_vehicles_payload({"data": {"vehicles": []}}, source_method=YandexSourceMethod.HTTP, current_time=current_time)
+    empty = parse_vehicles_payload(
+        {"data": {"vehicles": []}},
+        source_method=YandexSourceMethod.HTTP,
+        current_time=current_time,
+    )
     assert_equal(empty.available, False)
     assert_equal(empty.status, YandexSourceStatus.EMPTY)
 
-    bad = parse_vehicles_payload({"csrfToken": "abc"}, source_method=YandexSourceMethod.HTTP, current_time=current_time)
+    bad = parse_vehicles_payload(
+        {"csrfToken": "abc"},
+        source_method=YandexSourceMethod.HTTP,
+        current_time=current_time,
+    )
     assert_equal(bad.available, False)
     assert_equal(bad.status, YandexSourceStatus.PARSE_ERROR)
 
@@ -135,7 +153,12 @@ def run_vehicle_prediction_smoke() -> None:
     assert_equal(forecast.vehicles[0].lng, 83.11582825444825)
 
     no_target = parse_vehicle_prediction_payload(
-        {"data": {"threadId": "2161326764", "stops": [{"stopId": "stop__9982194", "arrivalEstimation": "20:34"}]}},
+        {
+            "data": {
+                "threadId": "2161326764",
+                "stops": [{"stopId": "stop__9982194", "arrivalEstimation": "20:34"}],
+            }
+        },
         profile=EVENING,
         current_time=current_time,
     )
@@ -171,15 +194,26 @@ def _run_nested_vehicle_smoke(current_time: datetime) -> None:
                             {
                                 "geometry": {
                                     "type": "LineString",
-                                    "coordinates": [[83.110656, 54.840692], [83.110924, 54.840811]],
+                                    "coordinates": [
+                                        [83.110656, 54.840692],
+                                        [83.110924, 54.840811],
+                                    ],
                                 },
-                                "properties": {"TrajectorySegmentMetaData": {"duration": 28, "time": 1780641523}},
+                                "properties": {
+                                    "TrajectorySegmentMetaData": {
+                                        "duration": 28,
+                                        "time": 1780641523,
+                                    }
+                                },
                             }
                         ],
                         "properties": {
                             "VehicleMetaData": {
                                 "id": "1651901|nested",
-                                "Transport": {"id": "1651901|nested", "threadId": "2161326764"},
+                                "Transport": {
+                                    "id": "1651901|nested",
+                                    "threadId": "2161326764",
+                                },
                             }
                         },
                     }

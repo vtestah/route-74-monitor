@@ -6,8 +6,16 @@ from datetime import datetime
 from route74.domain.eta import EtaConfidence
 from route74.domain.profiles import EVENING
 from route74.sources.yandex.config import YandexSourceConfig
-from route74.sources.yandex.live_evidence import LiveEtaEvidenceAdjustment, live_eta_evidence_adjustment
-from route74.sources.yandex.models import YandexLiveForecast, YandexSourceMethod, YandexSourceStatus, YandexVehicle
+from route74.sources.yandex.live_evidence import (
+    LiveEtaEvidenceAdjustment,
+    live_eta_evidence_adjustment,
+)
+from route74.sources.yandex.models import (
+    YandexLiveForecast,
+    YandexSourceMethod,
+    YandexSourceStatus,
+    YandexVehicle,
+)
 from route74.sources.yandex.parser import parse_vehicles_payload
 from route74.sources.yandex.smoke.assertions import assert_equal
 from route74.sources.yandex.transport import YandexTransportSource
@@ -20,8 +28,16 @@ def run_raw_vehicle_invalid_coordinate_smoke(current_time: datetime) -> None:
             "data": {
                 "vehicles": [
                     {"id": "bad-direct", "lat": 120, "lng": 83.1, "ageSeconds": 10},
-                    {"id": "bad-geometry", "geometry": {"coordinates": [183.1, 54.9]}, "ageSeconds": 12},
-                    {"id": "swapped-local", "geometry": {"coordinates": [54.940956, 83.115828]}, "ageSeconds": 14},
+                    {
+                        "id": "bad-geometry",
+                        "geometry": {"coordinates": [183.1, 54.9]},
+                        "ageSeconds": 12,
+                    },
+                    {
+                        "id": "swapped-local",
+                        "geometry": {"coordinates": [54.940956, 83.115828]},
+                        "ageSeconds": 14,
+                    },
                 ]
             }
         },
@@ -164,8 +180,12 @@ def run_live_eta_evidence_guard_smoke() -> None:
     assert_equal(live_eta_evidence_adjustment(forecast, arrival_minutes=True).applied, False)
 
 
-def run_vehicle_prediction_source_coordinate_fallback_smoke(current_time: datetime) -> None:
-    source = _VehiclePredictionCoordinatesFallbackSource(YandexSourceConfig(cache_seconds=0, browser_cooldown_seconds=20))
+def run_vehicle_prediction_source_coordinate_fallback_smoke(
+    current_time: datetime,
+) -> None:
+    source = _VehiclePredictionCoordinatesFallbackSource(
+        YandexSourceConfig(cache_seconds=0, browser_cooldown_seconds=20)
+    )
     forecast = source.get_forecast(EVENING, current_time)
     assert_equal(forecast.available, False)
     assert_equal(forecast.source_method, YandexSourceMethod.VEHICLE_PREDICTION)

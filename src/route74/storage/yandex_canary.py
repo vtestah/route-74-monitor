@@ -12,7 +12,6 @@ from route74.domain.profiles import PROFILE_KEYS
 from route74.models import NOVOSIBIRSK_TZ, now_local, require_local_datetime
 from route74.sources.yandex.models import YandexLiveForecast, YandexSourceStatus
 
-
 CANARY_RISK_STATUSES = {
     YandexSourceStatus.PARSE_ERROR.value,
     YandexSourceStatus.NEEDS_SIGNATURE.value,
@@ -50,10 +49,18 @@ class YandexCanaryRun:
             "status",
             _enum_text("canary run status", self.status, CANARY_RUN_STATUSES),
         )
-        object.__setattr__(self, "source_method", _plain_key("canary source method", self.source_method))
+        object.__setattr__(
+            self,
+            "source_method",
+            _plain_key("canary source method", self.source_method),
+        )
         object.__setattr__(self, "profile_key", _profile_key("canary profile key", self.profile_key))
         object.__setattr__(self, "schema_hash", _schema_hash_text(self.schema_hash))
-        object.__setattr__(self, "risk_reason", _required_reason("canary risk reason", self.risk_reason))
+        object.__setattr__(
+            self,
+            "risk_reason",
+            _required_reason("canary risk reason", self.risk_reason),
+        )
         object.__setattr__(self, "changed_keys", _changed_keys_tuple(self.changed_keys))
 
 
@@ -80,8 +87,16 @@ class YandexCanaryHealth:
                 "latest_checked_at",
                 _require_local_offset_datetime("canary health latest_checked_at", self.latest_checked_at),
             )
-        object.__setattr__(self, "risk_reason", _required_reason("canary health risk reason", self.risk_reason))
-        object.__setattr__(self, "risky_runs", _non_negative_int("canary health risky_runs", self.risky_runs))
+        object.__setattr__(
+            self,
+            "risk_reason",
+            _required_reason("canary health risk reason", self.risk_reason),
+        )
+        object.__setattr__(
+            self,
+            "risky_runs",
+            _non_negative_int("canary health risky_runs", self.risky_runs),
+        )
         if self.status == "ok" and self.risky_runs:
             raise ValueError("canary health risky_runs must be zero when status is ok")
 
@@ -332,11 +347,7 @@ def _valid_canary_rows(
     since: datetime,
     until: datetime,
 ) -> tuple[sqlite3.Row, ...]:
-    return tuple(
-        row
-        for row in rows
-        if _valid_canary_row(row, since=since, until=until)
-    )
+    return tuple(row for row in rows if _valid_canary_row(row, since=since, until=until))
 
 
 def _changed_key_names(payload: dict[str, object]) -> tuple[str, ...]:

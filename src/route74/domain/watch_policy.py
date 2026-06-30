@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 WATCH_DURATION_MINUTES = 30
 WATCH_POLL_INTERVAL_SECONDS = 10
 EARLY_ALERT_LEAVE_IN = 7

@@ -6,7 +6,13 @@ from datetime import datetime
 from pathlib import Path
 
 from route74.domain.commute import CommuteProfile
-from route74.domain.eta import EtaConfidence, EtaConsensus, EtaFactor, EtaFactorKind, EtaSource
+from route74.domain.eta import (
+    EtaConfidence,
+    EtaConsensus,
+    EtaFactor,
+    EtaFactorKind,
+    EtaSource,
+)
 from route74.domain.prediction_consensus import (
     PredictionCandidate,
     build_prediction_consensus,
@@ -18,9 +24,12 @@ from route74.domain.prediction_sources import EVENT_SOURCE_BY_ETA_SOURCE
 from route74.domain.reporting import matching_report_window
 from route74.domain.runtime_sources import RUNTIME_SOURCE_WEB_APP
 from route74.domain.yandex_history import YandexHistoryPrediction
-from route74.sources.yandex.live_evidence import LiveEtaEvidenceAdjustment, live_eta_evidence_adjustment
-from route74.sources.yandex.models import YandexLiveForecast, YandexVehicle
 from route74.sources.yandex.freshness import forecast_is_fresh
+from route74.sources.yandex.live_evidence import (
+    LiveEtaEvidenceAdjustment,
+    live_eta_evidence_adjustment,
+)
+from route74.sources.yandex.models import YandexLiveForecast, YandexVehicle
 from route74.sources.yandex.trust import (
     forecast_has_trusted_fresh_eta,
     is_trusted_eta_observation,
@@ -38,7 +47,6 @@ from route74.storage.prediction_lab import (
     load_source_reliability,
     vehicle_progress_confidence,
 )
-
 
 PREDICTION_STORAGE_ERRORS = (OSError, sqlite3.Error, ValueError)
 PREDICTION_STORAGE_GUARDRAIL_SCOPE = "prediction_storage_unavailable"
@@ -332,11 +340,7 @@ def _stateless_candidates(
                 diagnostic_factors=diagnostic_factors,
             )
         )
-    if (
-        yandex_history.available
-        and yandex_history.arrival_minutes is not None
-        and yandex_history.arrival_minutes >= 0
-    ):
+    if yandex_history.available and yandex_history.arrival_minutes is not None and yandex_history.arrival_minutes >= 0:
         candidates.append(
             PredictionCandidate(
                 EtaSource.YANDEX_HISTORY,

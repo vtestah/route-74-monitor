@@ -3,16 +3,19 @@ from __future__ import annotations
 from route74.domain.commute import DepartureDecision, DepartureSource
 from route74.domain.eta import EtaConfidence
 
-
-LIVE_DEPARTURE_SOURCES = frozenset({
-    DepartureSource.YANDEX,
-    DepartureSource.YANDEX_CORRECTED,
-    DepartureSource.VEHICLE_PROGRESS,
-})
-LOW_TRUST_DEPARTURE_SOURCES = frozenset({
-    *LIVE_DEPARTURE_SOURCES,
-    DepartureSource.YANDEX_HISTORY,
-})
+LIVE_DEPARTURE_SOURCES = frozenset(
+    {
+        DepartureSource.YANDEX,
+        DepartureSource.YANDEX_CORRECTED,
+        DepartureSource.VEHICLE_PROGRESS,
+    }
+)
+LOW_TRUST_DEPARTURE_SOURCES = frozenset(
+    {
+        *LIVE_DEPARTURE_SOURCES,
+        DepartureSource.YANDEX_HISTORY,
+    }
+)
 LOW_TRUST_SAFE_MARGIN_MINUTES = 5
 
 
@@ -87,10 +90,7 @@ def _needs_safe_margin(decision: DepartureDecision) -> bool:
     confidence = getattr(eta_consensus, "confidence", None)
     target_wait_minutes = _target_wait_minutes(decision)
     has_low_confidence = confidence == EtaConfidence.LOW
-    has_large_wait = (
-        target_wait_minutes is not None
-        and target_wait_minutes >= LOW_TRUST_SAFE_MARGIN_MINUTES
-    )
+    has_large_wait = target_wait_minutes is not None and target_wait_minutes >= LOW_TRUST_SAFE_MARGIN_MINUTES
     return has_low_confidence or has_large_wait
 
 

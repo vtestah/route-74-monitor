@@ -8,9 +8,14 @@ from pathlib import Path
 
 from route74.domain.commute import CommuteProfile
 from route74.domain.profiles import profile_by_key, profiles_for_selector
-from route74.domain.walk_buffer import MAX_WALK_MINUTES, MIN_WALK_MINUTES, is_valid_walk_minutes
-from route74.services.factory import commute_service as commute_service  # noqa: F401 — re-export
-
+from route74.domain.walk_buffer import (
+    MAX_WALK_MINUTES,
+    MIN_WALK_MINUTES,
+    is_valid_walk_minutes,
+)
+from route74.services.factory import (
+    commute_service as commute_service,
+)
 
 SQLITE_SIDECAR_SUFFIXES = (
     ".sqlite-journal",
@@ -74,9 +79,7 @@ def sqlite_db_path(value: str) -> Path:
     try:
         path = Path(value).expanduser()
     except RuntimeError as exc:
-        raise argparse.ArgumentTypeError(
-            "SQLite database path uses unknown home directory"
-        ) from exc
+        raise argparse.ArgumentTypeError("SQLite database path uses unknown home directory") from exc
     if path.name.lower().endswith(SQLITE_SIDECAR_SUFFIXES):
         raise argparse.ArgumentTypeError(
             "SQLite database path must point to the main database file, not WAL/SHM sidecar"

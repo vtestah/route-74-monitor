@@ -10,6 +10,7 @@ from route74.domain.walk_buffer import is_valid_walk_minutes
 from route74.domain.yandex_history import YandexHistoryPrediction
 from route74.sources.yandex.models import YandexLiveForecast
 
+
 class DepartureSource(StrEnum):
     YANDEX = "yandex"
     YANDEX_CORRECTED = "yandex_corrected"
@@ -17,11 +18,13 @@ class DepartureSource(StrEnum):
     YANDEX_HISTORY = "yandex_history"
     NONE = "none"
 
+
 class DepartureUrgency(StrEnum):
     GO_NOW = "go_now"
     GET_READY = "get_ready"
     RELAX = "relax"
     NO_DATA = "no_data"
+
 
 @dataclass(frozen=True)
 class CommuteProfile:
@@ -47,6 +50,7 @@ class CommuteProfile:
             raise ValueError("commute profile default walk minutes is out of range")
         validation.validate_profile_walk_note(self.walk_note)
 
+
 @dataclass(frozen=True)
 class CommuteSnapshot:
     profile: CommuteProfile
@@ -58,6 +62,7 @@ class CommuteSnapshot:
 
     def __post_init__(self) -> None:
         validation.validate_snapshot(self)
+
 
 @dataclass(frozen=True)
 class DepartureDecision:

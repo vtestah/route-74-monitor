@@ -31,8 +31,8 @@ from route74.domain.prediction_selection import (
     select_prediction_key,
 )
 from route74.domain.prediction_sources import (
-    EARLY_CONFLICT_EVENT_SOURCES,
     EARLY_CONFLICT_ETA_SOURCES,
+    EARLY_CONFLICT_EVENT_SOURCES,
     ETA_SOURCE_BY_EVENT_SOURCE,
     EVENT_SOURCE_PRIORITY,
     LIVE_ETA_SOURCES,
@@ -70,9 +70,13 @@ def build_prediction_consensus(
     return selected, consensus_from_candidates(valid_candidates, selected)
 
 
-def select_prediction_candidate(candidates: tuple[PredictionCandidate, ...]) -> PredictionCandidate:
+def select_prediction_candidate(
+    candidates: tuple[PredictionCandidate, ...],
+) -> PredictionCandidate:
     keyed = {str(index): candidate for index, candidate in enumerate(candidates)}
-    selected_key = select_prediction_key(tuple(_selection_candidate(key, candidate) for key, candidate in keyed.items()))
+    selected_key = select_prediction_key(
+        tuple(_selection_candidate(key, candidate) for key, candidate in keyed.items())
+    )
     return keyed[selected_key]
 
 
@@ -107,7 +111,9 @@ def _selection_candidate(key: str, candidate: PredictionCandidate) -> Prediction
     )
 
 
-def valid_prediction_candidates(candidates: tuple[PredictionCandidate, ...]) -> tuple[PredictionCandidate, ...]:
+def valid_prediction_candidates(
+    candidates: tuple[PredictionCandidate, ...],
+) -> tuple[PredictionCandidate, ...]:
     if not isinstance(candidates, tuple):
         raise ValueError("prediction candidates need tuple")
     return tuple(
@@ -591,8 +597,7 @@ def _spread_candidates(
     return tuple(
         candidate
         for candidate in candidates
-        if candidate.source != EtaSource.YANDEX_HISTORY
-        and _candidate_counts_for_spread(candidate, selected)
+        if candidate.source != EtaSource.YANDEX_HISTORY and _candidate_counts_for_spread(candidate, selected)
     )
 
 
@@ -627,9 +632,4 @@ def _valid_int(value: object) -> bool:
 
 
 def _valid_scope_text(value: object) -> bool:
-    return (
-        isinstance(value, str)
-        and value == value.strip()
-        and "\n" not in value
-        and "\r" not in value
-    )
+    return isinstance(value, str) and value == value.strip() and "\n" not in value and "\r" not in value

@@ -6,13 +6,22 @@ from route74.domain.commute import CommuteProfile
 from route74.domain.eta import EtaConfidence
 from route74.domain.profiles import EVENING
 from route74.sources.yandex.config import YandexSourceConfig
-from route74.sources.yandex.models import YandexLiveForecast, YandexSourceMethod, YandexSourceStatus, YandexVehicle
+from route74.sources.yandex.models import (
+    YandexLiveForecast,
+    YandexSourceMethod,
+    YandexSourceStatus,
+    YandexVehicle,
+)
 from route74.sources.yandex.smoke.assertions import assert_equal
 from route74.sources.yandex.transport import YandexTransportSource
 
 
-def run_auto_http_coordinates_continue_to_vehicle_prediction_smoke(current_time: datetime) -> None:
-    source = _HttpCoordinatesThenVehiclePredictionSource(YandexSourceConfig(cache_seconds=0, browser_cooldown_seconds=20))
+def run_auto_http_coordinates_continue_to_vehicle_prediction_smoke(
+    current_time: datetime,
+) -> None:
+    source = _HttpCoordinatesThenVehiclePredictionSource(
+        YandexSourceConfig(cache_seconds=0, browser_cooldown_seconds=20)
+    )
     forecast = source.get_forecast(EVENING, current_time)
 
     assert_equal(forecast.available, True)
@@ -22,9 +31,7 @@ def run_auto_http_coordinates_continue_to_vehicle_prediction_smoke(current_time:
 
 
 def run_stop_info_fallback_wins_http_schedule_smoke(current_time: datetime) -> None:
-    source = _HttpScheduleThenStopInfoFrequencySource(
-        YandexSourceConfig(cache_seconds=0, browser_cooldown_seconds=20)
-    )
+    source = _HttpScheduleThenStopInfoFrequencySource(YandexSourceConfig(cache_seconds=0, browser_cooldown_seconds=20))
     forecast = source.get_forecast(EVENING, current_time)
 
     assert_equal(forecast.available, False)

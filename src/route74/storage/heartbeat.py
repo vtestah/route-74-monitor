@@ -105,7 +105,10 @@ def save_bot_update_offset(
     name = _normalize_name(name, "bot update offset")
     updated_at = updated_at or now_local()
     updated_at = _normalize_updated_at(updated_at, "bot update offset updated_at")
-    update_offset = max(load_bot_update_offset(connection, name), _normalize_update_offset(update_offset))
+    update_offset = max(
+        load_bot_update_offset(connection, name),
+        _normalize_update_offset(update_offset),
+    )
     connection.execute(
         """
         INSERT INTO bot_update_offsets(name, update_offset, updated_at)

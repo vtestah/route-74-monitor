@@ -9,20 +9,35 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from route74.build_info import load_build_info
+from route74.dashboard.preview import (
+    dashboard_preview_cache_dir,
+    load_dashboard_preview,
+)
+from route74.diagnostics import sanitize_diagnostic_text
 from route74.domain.commute_change import DepartureChange
 from route74.domain.profiles import PROFILES_BY_KEY
 from route74.domain.reporting import REPORT_WINDOWS, report_window_for_profile
-from route74.domain.runtime_sources import BOT_EVENT_USER_REPLY, BOT_EVENT_WATCH_EARLY, BOT_EVENT_WATCH_FINAL
+from route74.domain.runtime_sources import (
+    BOT_EVENT_USER_REPLY,
+    BOT_EVENT_WATCH_EARLY,
+    BOT_EVENT_WATCH_FINAL,
+)
 from route74.domain.yandex_history import DEFAULT_HISTORY_PERCENTILE
-from route74.diagnostics import sanitize_diagnostic_text
 from route74.models import now_local
-from route74.presenters.eta_factors import format_eta_factor_payload_texts
 from route74.presenters.bot_errors import bot_error_category_text
 from route74.presenters.commute_change import format_departure_change_details
+from route74.presenters.eta_factors import format_eta_factor_payload_texts
 from route74.presenters.no_eta_reason import no_eta_reason_text
 from route74.presenters.support_snapshot import format_support_snapshot
-from route74.dashboard.preview import dashboard_preview_cache_dir, load_dashboard_preview
 from route74.services.commute_change import build_runtime_prediction_change_map
+from route74.services.yandex_history import (
+    DEFAULT_FALLBACK_BUCKET_MINUTES,
+    DEFAULT_HISTORY_DAYS,
+    DEFAULT_HISTORY_MAX_AGE_SECONDS,
+    DEFAULT_MIN_HISTORY_DAYS,
+    DEFAULT_MIN_OBSERVATIONS,
+    DEFAULT_PRIMARY_BUCKET_MINUTES,
+)
 from route74.storage import (
     BotLatencySummary,
     BotRuntimeCalibration,
@@ -45,8 +60,11 @@ from route74.storage.forecast_backtest import (
     best_forecast_backtest_result,
     selected_forecast_backtest_result,
 )
-from route74.storage.helpers import WEEKDAYS
-from route74.storage.helpers import arrival_minutes_from_json, optional_int_value
+from route74.storage.helpers import (
+    WEEKDAYS,
+    arrival_minutes_from_json,
+    optional_int_value,
+)
 from route74.storage.monitoring import (
     DEFAULT_HISTORY_BACKTEST_MIN_EVALUATED,
     DEFAULT_HISTORY_BACKTEST_WARN_MISS_RATE_PERCENT,
@@ -66,24 +84,19 @@ from route74.support_actions import (
     support_snapshot_command_for_profile,
     watch_state_command_for_path,
 )
-from route74.services.yandex_history import (
-    DEFAULT_FALLBACK_BUCKET_MINUTES,
-    DEFAULT_HISTORY_DAYS,
-    DEFAULT_HISTORY_MAX_AGE_SECONDS,
-    DEFAULT_MIN_HISTORY_DAYS,
-    DEFAULT_MIN_OBSERVATIONS,
-    DEFAULT_PRIMARY_BUCKET_MINUTES,
-)
 from route74.support_triage import (
+    TRIAGE_STATUS_ORDER,
     SupportTriage,
     SupportTriageItem,
-    TRIAGE_STATUS_ORDER,
     build_support_triage,
     operator_primary_action,
     operator_primary_triage_item,
 )
-from route74.watch_state import DEFAULT_WATCH_STATE_PATH, WatchStateSummary, summarize_watch_state
-
+from route74.watch_state import (
+    DEFAULT_WATCH_STATE_PATH,
+    WatchStateSummary,
+    summarize_watch_state,
+)
 
 WINDOWS_BY_KEY = {window.key: window for window in REPORT_WINDOWS}
 BOT_LATENCY_MIN_EVENTS = 3
@@ -335,10 +348,7 @@ def build_dashboard_summary(
                 BOT_EVENT_WATCH_EARLY: bot_runtime_command(hours=24, limit=8, event_kind=BOT_EVENT_WATCH_EARLY),
                 BOT_EVENT_WATCH_FINAL: bot_runtime_command(hours=24, limit=8, event_kind=BOT_EVENT_WATCH_FINAL),
             },
-            "items": [
-                _bot_prediction(item, change=bot_prediction_changes.get(item.id))
-                for item in bot_predictions
-            ],
+            "items": [_bot_prediction(item, change=bot_prediction_changes.get(item.id)) for item in bot_predictions],
         },
         "forecast": {
             "ready": forecast.ready,
@@ -359,10 +369,7 @@ def build_dashboard_summary(
             current_time=current_time,
         ),
         "prediction_evaluate": {
-            "commands": {
-                window.key: prediction_evaluate_command_for_window(window.key)
-                for window in REPORT_WINDOWS
-            },
+            "commands": {window.key: prediction_evaluate_command_for_window(window.key) for window in REPORT_WINDOWS},
         },
     }
 
@@ -372,7 +379,10 @@ def _dashboard_evidence_payload(
     *,
     current_time: datetime,
 ) -> dict[str, object]:
-    latest = next((prediction for prediction in predictions if prediction.event_kind == BOT_EVENT_USER_REPLY), None)
+    latest = next(
+        (prediction for prediction in predictions if prediction.event_kind == BOT_EVENT_USER_REPLY),
+        None,
+    )
     if latest is None:
         return _dashboard_evidence_missing_payload()
     profile = PROFILES_BY_KEY.get(latest.profile_key)
@@ -505,8 +515,7 @@ def _dashboard_check_policy(
             "запускай только по warning/critical сигналу."
         ),
         "mode_note": (
-            "Это policy-слой dashboard: он классифицирует уже собранные сигналы, "
-            "а тяжёлые команды не запускает сам."
+            "Это policy-слой dashboard: он классифицирует уже собранные сигналы, а тяжёлые команды не запускает сам."
         ),
         "auto_checks": [
             {
@@ -737,7 +746,9 @@ def _bot_prediction_quality(
     }
 
 
-def _bot_prediction_quality_group(group: BotRuntimePredictionQualityGroup) -> dict[str, object]:
+def _bot_prediction_quality_group(
+    group: BotRuntimePredictionQualityGroup,
+) -> dict[str, object]:
     return {
         "key": group.key,
         "total": group.total,
@@ -776,7 +787,9 @@ def _bot_prediction_calibration(summary: BotRuntimeCalibration) -> dict[str, obj
     }
 
 
-def _bot_prediction_calibration_group(group: BotRuntimeCalibrationGroup) -> dict[str, object]:
+def _bot_prediction_calibration_group(
+    group: BotRuntimeCalibrationGroup,
+) -> dict[str, object]:
     return {
         "key": group.key,
         "total": group.total,
@@ -1001,7 +1014,9 @@ def _profile_support_snapshot(
     }
 
 
-def _profile_support_snapshot_all_items(triage: dict[str, object]) -> list[dict[str, object]]:
+def _profile_support_snapshot_all_items(
+    triage: dict[str, object],
+) -> list[dict[str, object]]:
     items = triage.get("items")
     if not isinstance(items, list):
         return []
@@ -1020,7 +1035,10 @@ def _profile_support_snapshot_visible_items(
     primary_identity = _issue_identity(primary_issue) if primary_issue is not None else None
     primary = next((item for item in visible if _issue_identity(item) == primary_identity), None)
     if primary is not None:
-        visible = [primary, *(item for item in visible if _issue_identity(item) != primary_identity)]
+        visible = [
+            primary,
+            *(item for item in visible if _issue_identity(item) != primary_identity),
+        ]
     return visible[:limit]
 
 
@@ -1083,7 +1101,10 @@ def _forecast_refresh_reason(
     total_windows = len(forecast_windows)
     if forecast_ready:
         return f"готово {ready_windows}/{total_windows} окон"
-    blocked = next((window for window in forecast_windows if not bool(getattr(window, "ready", False))), None)
+    blocked = next(
+        (window for window in forecast_windows if not bool(getattr(window, "ready", False))),
+        None,
+    )
     if blocked is None:
         return f"готово {ready_windows}/{total_windows} окон"
     return (
@@ -1239,7 +1260,9 @@ def _format_profile_support_snapshot(
     return format_support_snapshot(view)
 
 
-def _dashboard_snapshot_item(payload: dict[str, object] | None) -> _DashboardSupportSnapshotItem | None:
+def _dashboard_snapshot_item(
+    payload: dict[str, object] | None,
+) -> _DashboardSupportSnapshotItem | None:
     if payload is None:
         return None
     return _DashboardSupportSnapshotItem(
@@ -1264,7 +1287,10 @@ def _profile_primary_issue(triage: dict[str, object]) -> dict[str, object] | Non
     if not primary_action:
         return None
     primary = next((item for item in issue_items if item.get("action") == primary_action), None)
-    if primary is None or str(primary.get("severity", "")) not in {"warning", "critical"}:
+    if primary is None or str(primary.get("severity", "")) not in {
+        "warning",
+        "critical",
+    }:
         return None
     return _profile_issue_payload(primary)
 
@@ -1292,9 +1318,7 @@ def _profile_issue_count(triage: dict[str, object]) -> int:
     if not isinstance(items, list):
         return 0
     return sum(
-        1
-        for item in items
-        if isinstance(item, dict) and str(item.get("severity", "")) in {"warning", "critical"}
+        1 for item in items if isinstance(item, dict) and str(item.get("severity", "")) in {"warning", "critical"}
     )
 
 
@@ -1483,7 +1507,9 @@ def _forecast_backtest_command(profile_key: str) -> str:
         return ""
 
 
-def _profile_runtime_quality(group: BotRuntimePredictionQualityGroup | None) -> dict[str, object]:
+def _profile_runtime_quality(
+    group: BotRuntimePredictionQualityGroup | None,
+) -> dict[str, object]:
     if group is None:
         return {
             "status": "missing",
@@ -1519,7 +1545,9 @@ def _profile_runtime_quality_status(group: BotRuntimePredictionQualityGroup) -> 
     return "ok"
 
 
-def _profile_runtime_calibration(group: BotRuntimeCalibrationGroup | None) -> dict[str, object]:
+def _profile_runtime_calibration(
+    group: BotRuntimeCalibrationGroup | None,
+) -> dict[str, object]:
     if group is None:
         return {
             "status": "missing",
@@ -1549,9 +1577,7 @@ def _profile_runtime_source_calibration(
     _profile, source_key = _profile_source_key(group.key)
     payload["source_key"] = source_key
     payload["command"] = (
-        prediction_calibration_command_for_window(window_key)
-        if group.status in {"late_risk", "extra_wait"}
-        else ""
+        prediction_calibration_command_for_window(window_key) if group.status in {"late_risk", "extra_wait"} else ""
     )
     return payload
 
@@ -1579,7 +1605,9 @@ def _profile_source_key(value: object) -> tuple[str, str]:
     return profile, source
 
 
-def _source_calibration_priority(group: BotRuntimeCalibrationGroup) -> tuple[int, int, int, int]:
+def _source_calibration_priority(
+    group: BotRuntimeCalibrationGroup,
+) -> tuple[int, int, int, int]:
     status_rank = {
         "late_risk": 4,
         "extra_wait": 3,
@@ -1934,7 +1962,11 @@ def _counts(items: object) -> list[dict[str, object]]:
 
 def _error_category_counts(items: object) -> list[dict[str, object]]:
     return [
-        {"key": item.key, "count": item.count, "label": bot_error_category_text(str(item.key))}
+        {
+            "key": item.key,
+            "count": item.count,
+            "label": bot_error_category_text(str(item.key)),
+        }
         for item in items
     ]
 

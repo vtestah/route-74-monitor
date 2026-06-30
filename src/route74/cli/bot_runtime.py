@@ -8,14 +8,12 @@ from route74.cli.common import positive_int
 from route74.diagnostics import sanitize_diagnostic_text
 from route74.domain.commute_change import DepartureChange
 from route74.domain.profiles import PROFILE_KEYS
-from route74.domain.runtime_sources import BOT_EVENT_KINDS
-from route74.domain.runtime_sources import BOT_EVENT_USER_REPLY
+from route74.domain.runtime_sources import BOT_EVENT_KINDS, BOT_EVENT_USER_REPLY
 from route74.models import now_local
 from route74.presenters.commute_change import format_departure_change_details
 from route74.presenters.eta_factors import format_eta_factor_payload_texts
 from route74.presenters.runtime import runtime_prediction_source_text
 from route74.services.commute_change import build_runtime_prediction_change_map
-from route74.support_actions import prediction_calibration_command_for_profile
 from route74.storage import (
     BotRuntimeCalibration,
     BotRuntimeCalibrationGroup,
@@ -28,12 +26,18 @@ from route74.storage import (
     summarize_bot_runtime_calibration,
     summarize_bot_runtime_predictions,
 )
+from route74.support_actions import prediction_calibration_command_for_profile
 
 
 def register_bot_runtime_command(subparsers: argparse._SubParsersAction) -> None:
     runtime = subparsers.add_parser("runtime-events", help="Show web runtime prediction quality and recent events.")
     runtime.add_argument("--hours", type=positive_int, default=24, help="Summary window in hours.")
-    runtime.add_argument("--limit", type=positive_int, default=8, help="Recent runtime decisions to show.")
+    runtime.add_argument(
+        "--limit",
+        type=positive_int,
+        default=8,
+        help="Recent runtime decisions to show.",
+    )
     runtime.add_argument(
         "--profile",
         choices=PROFILE_KEYS,
@@ -264,7 +268,9 @@ def _profile_source_key(value: object) -> tuple[str, str]:
     return profile, source
 
 
-def _source_calibration_priority(group: BotRuntimeCalibrationGroup) -> tuple[int, int, int, int]:
+def _source_calibration_priority(
+    group: BotRuntimeCalibrationGroup,
+) -> tuple[int, int, int, int]:
     status_rank = {
         "late_risk": 4,
         "extra_wait": 3,

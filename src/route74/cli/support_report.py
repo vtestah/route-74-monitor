@@ -9,8 +9,8 @@ from route74.cli.bot_latency import format_bot_latency_summary
 from route74.cli.bot_runtime import format_bot_runtime_summary
 from route74.cli.common import positive_int
 from route74.cli.forecast_backtest import format_forecast_backtest_summary
-from route74.cli.forecast_health import format_forecast_health_summary
 from route74.cli.forecast_formatting import format_forecast_readiness_summary
+from route74.cli.forecast_health import format_forecast_health_summary
 from route74.cli.forecast_readiness import WINDOWS_BY_KEY
 from route74.cli.monitor import format_monitor_summary
 from route74.cli.prediction_lab import format_prediction_lab_calibration
@@ -39,8 +39,8 @@ from route74.storage import (
     summarize_bot_runtime_calibration,
     summarize_bot_runtime_predictions,
     summarize_forecast_health,
-    summarize_yandex_forecast_readiness,
     summarize_prediction_lab_calibration,
+    summarize_yandex_forecast_readiness,
 )
 from route74.storage.forecast_backtest import (
     DEFAULT_FORECAST_BACKTEST_PERCENTILES,
@@ -50,7 +50,6 @@ from route74.storage.forecast_backtest import (
 from route74.storage.forecast_health import ForecastHealthSummary
 from route74.storage.helpers import WEEKDAYS
 from route74.storage.monitoring import MonitorSummary, summarize_monitor
-from route74.support_triage import SupportTriage, build_support_triage, operator_primary_action
 from route74.support_actions import (
     bot_latency_command,
     bot_runtime_command,
@@ -61,8 +60,17 @@ from route74.support_actions import (
     support_report_command_for_window,
     watch_state_command_for_path,
 )
-from route74.watch_state import DEFAULT_WATCH_STATE_PATH, WatchStateSummary, format_watch_state_summary, summarize_watch_state
-
+from route74.support_triage import (
+    SupportTriage,
+    build_support_triage,
+    operator_primary_action,
+)
+from route74.watch_state import (
+    DEFAULT_WATCH_STATE_PATH,
+    WatchStateSummary,
+    format_watch_state_summary,
+    summarize_watch_state,
+)
 
 SUPPORT_REPORT_DB_LABEL = "<db>"
 SUPPORT_REPORT_CRITICAL = "critical"
@@ -115,16 +123,36 @@ class _TriageBuildResult:
 
 def register_support_report_command(subparsers: argparse._SubParsersAction) -> None:
     report = subparsers.add_parser("support-report", help="Print one sanitized operational diagnostic report.")
-    report.add_argument("--window", choices=tuple(WINDOWS_BY_KEY), default=None, help="Report window to diagnose.")
-    report.add_argument("--profile", choices=PROFILE_KEYS, default=None, help="Shortcut for the profile report window.")
+    report.add_argument(
+        "--window",
+        choices=tuple(WINDOWS_BY_KEY),
+        default=None,
+        help="Report window to diagnose.",
+    )
+    report.add_argument(
+        "--profile",
+        choices=PROFILE_KEYS,
+        default=None,
+        help="Shortcut for the profile report window.",
+    )
     report.add_argument(
         "--event-kind",
         choices=sorted(BOT_EVENT_KINDS),
         default=BOT_EVENT_USER_REPLY,
         help="Focus the runtime-events slice on one web runtime event kind.",
     )
-    report.add_argument("--hours", type=positive_int, default=24, help="Bot diagnostics window in hours.")
-    report.add_argument("--limit", type=positive_int, default=8, help="Recent runtime decisions to show.")
+    report.add_argument(
+        "--hours",
+        type=positive_int,
+        default=24,
+        help="Bot diagnostics window in hours.",
+    )
+    report.add_argument(
+        "--limit",
+        type=positive_int,
+        default=8,
+        help="Recent runtime decisions to show.",
+    )
     report.add_argument(
         "--watch-state-path",
         type=Path,
@@ -218,7 +246,10 @@ def build_support_report(
                         step_minutes=30,
                     )
                 sections.append(
-                    SupportReportSection("forecast-health", format_forecast_health_summary(forecast, db_label))
+                    SupportReportSection(
+                        "forecast-health",
+                        format_forecast_health_summary(forecast, db_label),
+                    )
                 )
             except Exception as exc:
                 sections.append(_failed_section("forecast-health", exc))
@@ -438,7 +469,7 @@ def format_support_report(report: SupportReport) -> str:
     header = (
         f"support report window={report.window_key} profile={report.profile_key} "
         f"hours={report.hours} limit={report.limit}{event_kind} at={report.current_time:%Y-%m-%d %H:%M} "
-        f"status={report.status} next=\"{report.next_action}\" db={report.db_label}"
+        f'status={report.status} next="{report.next_action}" db={report.db_label}'
     )
     lines = [header]
     for section in report.sections:
@@ -461,12 +492,7 @@ def _triage_result(
     failed_sections: tuple[SupportReportSection, ...],
     watch_state_path: Path,
 ) -> _TriageBuildResult:
-    if (
-        monitor is None
-        or forecast is None
-        or runtime_quality is None
-        or runtime_calibration is None
-    ):
+    if monitor is None or forecast is None or runtime_quality is None or runtime_calibration is None:
         return _TriageBuildResult(
             section=SupportReportSection(
                 "triage",
@@ -568,7 +594,7 @@ def _format_triage(
         if primary_failed_section is not None
         else operator_primary_action(triage)
     )
-    lines = [f"triage status={status} primary=\"{primary_action}\""]
+    lines = [f'triage status={status} primary="{primary_action}"']
     lines.extend(
         _failed_section_triage_line(
             section,
@@ -584,10 +610,7 @@ def _format_triage(
         if not failed_sections:
             lines.append("- ok: no active issues")
         return "\n".join(lines)
-    lines.extend(
-        f"- {item.severity} {item.key}: {item.message} action=\"{item.action}\""
-        for item in triage.items
-    )
+    lines.extend(f'- {item.severity} {item.key}: {item.message} action="{item.action}"' for item in triage.items)
     return "\n".join(lines)
 
 
@@ -613,7 +636,7 @@ def _format_failed_section_triage(
         if primary_failed_section is not None
         else "route74 db-health"
     )
-    lines = [f"triage status=critical primary=\"{primary_action}\""]
+    lines = [f'triage status=critical primary="{primary_action}"']
     if not failed_sections:
         lines.append('- critical support_report: report dependencies are unavailable action="route74 db-health"')
         return "\n".join(lines)
@@ -653,7 +676,9 @@ def _failed_section_primary_action(
     return "route74 db-health"
 
 
-def _primary_failed_section(failed_sections: tuple[SupportReportSection, ...]) -> SupportReportSection | None:
+def _primary_failed_section(
+    failed_sections: tuple[SupportReportSection, ...],
+) -> SupportReportSection | None:
     if not failed_sections:
         return None
     return max(
@@ -687,7 +712,7 @@ def _failed_section(key: str, error: Exception) -> SupportReportSection:
     error_type = sanitize_diagnostic_text(type(error).__name__, fallback="Exception", limit=80)
     return SupportReportSection(
         key,
-        f"section_error section={key} type={error_type} message=\"{message}\"",
+        f'section_error section={key} type={error_type} message="{message}"',
         failed=True,
     )
 

@@ -5,9 +5,13 @@ from dataclasses import dataclass
 import httpx
 
 from route74.diagnostics import sanitize_diagnostic_text
-from route74.notifications.base import NotificationMessage, NotificationSendResult, NotificationStatus, Notifier
+from route74.notifications.base import (
+    NotificationMessage,
+    NotificationSendResult,
+    NotificationStatus,
+    Notifier,
+)
 from route74.notifications.config import PushoverConfig
-
 
 PUSHOVER_API_URL = "https://api.pushover.net/1/messages.json"
 PUSHOVER_TIMEOUT_SECONDS = 10.0

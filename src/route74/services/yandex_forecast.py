@@ -6,8 +6,11 @@ from typing import Protocol
 
 from route74.domain.commute import CommuteProfile
 from route74.sources.yandex.constants import max_raw_eta_minutes
-from route74.sources.yandex.models import YandexLiveForecast, YandexSourceStatus, YandexVehicle
-
+from route74.sources.yandex.models import (
+    YandexLiveForecast,
+    YandexSourceStatus,
+    YandexVehicle,
+)
 
 MAX_SOURCE_EXCEPTION_TYPE_LENGTH = 80
 
@@ -17,8 +20,7 @@ class YandexSource(Protocol):
         self,
         profile: CommuteProfile,
         current_time: datetime,
-    ) -> YandexLiveForecast:
-        ...
+    ) -> YandexLiveForecast: ...
 
 
 def build_yandex_forecast(

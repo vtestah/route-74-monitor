@@ -5,7 +5,6 @@ from collections.abc import Mapping
 from math import isfinite
 from pathlib import Path
 
-
 DEFAULT_ENV_PATH = Path(".env")
 ENV_FILE = "ROUTE74_ENV_FILE"
 ENV_DB_PATH = "ROUTE74_DB_PATH"

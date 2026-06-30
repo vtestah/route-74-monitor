@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from route74.sources.yandex.constants import max_raw_eta_minutes
-from route74.sources.yandex.freshness import DEFAULT_FRESH_VEHICLE_MAX_AGE_SECONDS, forecast_is_fresh
+from route74.sources.yandex.freshness import (
+    DEFAULT_FRESH_VEHICLE_MAX_AGE_SECONDS,
+    forecast_is_fresh,
+)
 from route74.sources.yandex.models import YandexLiveForecast
-
 
 TRUSTED_ETA_SOURCE_METHODS = ("vehicle_prediction", "stop_info")
 UNTRUSTED_ETA_RAW_STATUSES = ("vehicle_prediction_thread_fallback",)
@@ -56,9 +58,7 @@ def forecast_has_trusted_fresh_eta(
 
 def _valid_arrivals(arrival_minutes: tuple[int, ...]) -> tuple[int, ...]:
     max_minutes = max_raw_eta_minutes(None)
-    return tuple(
-        sorted({minutes for minutes in arrival_minutes if _valid_arrival(minutes, max_minutes)})
-    )
+    return tuple(sorted({minutes for minutes in arrival_minutes if _valid_arrival(minutes, max_minutes)}))
 
 
 def _valid_arrival(value: object, max_minutes: int) -> bool:

@@ -1,15 +1,23 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from route74.models import require_local_datetime
 from route74.sources.yandex.parser.common import as_float, number_at
 
-
 MAX_REASONABLE_ETA_MINUTES = 180
 MAX_FUTURE_TIMESTAMP_SKEW_SECONDS = 60
-NON_ETA_NUMERIC_TOKENS = ("azimuth", "bearing", "coordinate", "distance", "length", "meters", "metre", "speed")
+NON_ETA_NUMERIC_TOKENS = (
+    "azimuth",
+    "bearing",
+    "coordinate",
+    "distance",
+    "length",
+    "meters",
+    "metre",
+    "speed",
+)
 NON_ETA_NUMERIC_SEGMENTS = {"lat", "lng", "lon", "meter"}
 
 
@@ -84,7 +92,7 @@ def _age_from_time(value: Any, current_time: datetime) -> int | None:
     if number is not None:
         timestamp = number / 1000 if number > 10_000_000_000 else number
         try:
-            observed = datetime.fromtimestamp(timestamp, tz=timezone.utc).astimezone(current_time.tzinfo)
+            observed = datetime.fromtimestamp(timestamp, tz=UTC).astimezone(current_time.tzinfo)
         except (OSError, OverflowError):
             return None
         return _clamped_age_seconds(observed, current_time)

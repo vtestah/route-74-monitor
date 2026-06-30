@@ -4,7 +4,6 @@ from route74.domain.commute import DepartureDecision, DepartureSource
 from route74.domain.yandex_history import YandexHistoryPrediction
 from route74.sources.yandex.models import YandexLiveForecast, YandexSourceStatus
 
-
 NO_ETA_UNKNOWN_REASON = "unknown_no_eta"
 
 

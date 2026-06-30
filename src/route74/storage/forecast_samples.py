@@ -8,7 +8,11 @@ from route74.domain.reporting import ReportWindow, matching_report_window
 from route74.sources.yandex.freshness import effective_forecast_age_seconds
 from route74.sources.yandex.models import YandexLiveForecast
 from route74.sources.yandex.trust import is_trusted_eta_observation
-from route74.storage.helpers import arrival_minutes_from_json, count_table_rows, optional_int_value
+from route74.storage.helpers import (
+    arrival_minutes_from_json,
+    count_table_rows,
+    optional_int_value,
+)
 from route74.storage.models import RouteTrafficSnapshot
 
 
@@ -106,6 +110,7 @@ def backfill_yandex_forecast_samples(connection: sqlite3.Connection) -> int:
 def count_yandex_forecast_samples(connection: sqlite3.Connection) -> int:
     return count_table_rows(connection, "yandex_forecast_samples")
 
+
 def _sample_values(
     *,
     yandex_snapshot_id: int,
@@ -193,6 +198,7 @@ def _trusted_arrivals(
 def _traffic_raw(traffic: RouteTrafficSnapshot | None) -> dict[str, object]:
     return {} if traffic is None or traffic.raw is None else traffic.raw
 
+
 def _json_object(raw_json: str) -> dict[str, object]:
     try:
         raw = json.loads(raw_json)
@@ -200,11 +206,13 @@ def _json_object(raw_json: str) -> dict[str, object]:
         return {}
     return raw if isinstance(raw, dict) else {}
 
+
 def _optional_datetime(value: object) -> datetime | None:
     try:
         return datetime.fromisoformat(str(value))
     except ValueError:
         return None
+
 
 _INSERT_SQL = """
     INSERT INTO yandex_forecast_samples(

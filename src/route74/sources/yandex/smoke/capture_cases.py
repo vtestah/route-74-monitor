@@ -50,7 +50,10 @@ def _run_browser_capture_parse_error_smoke() -> None:
 
     prediction_errors: list[str] = []
     capture_prediction_response(
-        _FakeResponse("https://yandex.ru/maps/api/masstransit/getVehiclePredictionInfo", {"data": []}),
+        _FakeResponse(
+            "https://yandex.ru/maps/api/masstransit/getVehiclePredictionInfo",
+            {"data": []},
+        ),
         [],
         parse_errors=prediction_errors,
     )

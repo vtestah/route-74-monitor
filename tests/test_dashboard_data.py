@@ -30,9 +30,7 @@ Row = Callable[..., dict[str, object]]
         (5, True),
     ],
 )
-def test_series_eta_stats_respect_min_sample_threshold(
-    report_row: Row, eta_count: int, expect_stats: bool
-) -> None:
+def test_series_eta_stats_respect_min_sample_threshold(report_row: Row, eta_count: int, expect_stats: bool) -> None:
     rows = [report_row(arrivals=f"[{minutes}]") for minutes in range(5, 5 + eta_count)]
 
     series = _series_row("2026-06-04", rows)
@@ -84,9 +82,7 @@ def test_series_ignores_malformed_traffic_values(report_row: Row) -> None:
         ([90, 90], 2),
     ],
 )
-def test_avg_minutes_from_seconds_rounds_once(
-    seconds: list[int], expected: int | None
-) -> None:
+def test_avg_minutes_from_seconds_rounds_once(seconds: list[int], expected: int | None) -> None:
     assert _avg_minutes_from_seconds(seconds) == expected
 
 

@@ -3,7 +3,12 @@ from __future__ import annotations
 from dataclasses import replace
 
 from route74.domain.eta import EtaConfidence
-from route74.sources.yandex.models import YandexLiveForecast, YandexSourceMethod, YandexSourceStatus, YandexVehicle
+from route74.sources.yandex.models import (
+    YandexLiveForecast,
+    YandexSourceMethod,
+    YandexSourceStatus,
+    YandexVehicle,
+)
 
 
 def route_vehicle_forecast(
@@ -28,12 +33,7 @@ def route_vehicle_forecast(
 
 
 def newest_age_seconds(vehicles: tuple[YandexVehicle, ...]) -> int | None:
-    ages = [
-        age
-        for vehicle in vehicles
-        for age in (_valid_age_seconds(vehicle.age_seconds),)
-        if age is not None
-    ]
+    ages = [age for vehicle in vehicles for age in (_valid_age_seconds(vehicle.age_seconds),) if age is not None]
     return min(ages) if ages else None
 
 

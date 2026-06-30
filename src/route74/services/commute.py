@@ -20,14 +20,12 @@ from route74.services.yandex_forecast import (
 )
 from route74.storage import STORAGE_READ_ERRORS
 
-
 HISTORY_PREDICTOR_ERRORS = STORAGE_READ_ERRORS
 MAX_HISTORY_EXCEPTION_TYPE_LENGTH = 80
 
 
 class HistoryPredictor(Protocol):
-    def predict_at(self, profile: CommuteProfile, current_time: datetime) -> YandexHistoryPrediction:
-        ...
+    def predict_at(self, profile: CommuteProfile, current_time: datetime) -> YandexHistoryPrediction: ...
 
 
 Clock = Callable[[], datetime]

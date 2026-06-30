@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
-
 DEFAULT_HISTORY_PERCENTILE = 80
 MAX_HISTORY_REASON_LENGTH = 120
 
@@ -53,7 +52,7 @@ class YandexHistoryPrediction:
         reason: str = "history_unavailable",
         scope: YandexHistoryScope = YandexHistoryScope.PROFILE_TIME,
         report_window_key: str = "",
-    ) -> "YandexHistoryPrediction":
+    ) -> YandexHistoryPrediction:
         return cls(
             available=False,
             arrival_minutes=None,

@@ -14,8 +14,16 @@ from route74.domain.reporting import (
 )
 from route74.models import now_local
 from route74.sources.yandex.models import YandexLiveForecast
-from route74.sources.yandex.trust import is_trusted_eta_observation, trusted_arrivals_for_forecast
-from route74.storage.helpers import arrival_minutes_from_json, count_rows, count_table_rows, optional_int_value
+from route74.sources.yandex.trust import (
+    is_trusted_eta_observation,
+    trusted_arrivals_for_forecast,
+)
+from route74.storage.helpers import (
+    arrival_minutes_from_json,
+    count_rows,
+    count_table_rows,
+    optional_int_value,
+)
 from route74.storage.models import ReportWindowSummary, RouteTrafficSnapshot
 
 

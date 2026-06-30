@@ -3,7 +3,6 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-
 NOVOSIBIRSK_TZ = ZoneInfo("Asia/Novosibirsk")
 
 
@@ -20,13 +19,8 @@ def require_local_datetime(value: object, *, name: str = "datetime") -> datetime
         raise ValueError(f"{name} needs timezone-aware datetime") from error
     if value.tzinfo is None or offset is None:
         raise ValueError(f"{name} needs timezone-aware datetime")
-    if (
-        not isinstance(value.tzinfo, ZoneInfo)
-        or value.tzinfo.key != NOVOSIBIRSK_TZ.key
-    ):
-        raise ValueError(
-            f"{name} needs Asia/Novosibirsk timezone, got {_timezone_label(value, offset)}"
-        )
+    if not isinstance(value.tzinfo, ZoneInfo) or value.tzinfo.key != NOVOSIBIRSK_TZ.key:
+        raise ValueError(f"{name} needs Asia/Novosibirsk timezone, got {_timezone_label(value, offset)}")
     return value
 
 

@@ -4,7 +4,6 @@ from dataclasses import dataclass
 
 from route74.domain.eta import EtaSource
 
-
 SOURCE_TARGET_STOP_LIVE = "target_stop_live"
 SOURCE_CORRECTED_LIVE = "corrected_live"
 SOURCE_VEHICLE_PROGRESS = "vehicle_progress"
@@ -33,7 +32,9 @@ class PredictionSourceSpec:
             raise ValueError("prediction source early conflict flag needs boolean")
 
 
-def validate_prediction_source_specs(specs: tuple[PredictionSourceSpec, ...]) -> tuple[PredictionSourceSpec, ...]:
+def validate_prediction_source_specs(
+    specs: tuple[PredictionSourceSpec, ...],
+) -> tuple[PredictionSourceSpec, ...]:
     if not isinstance(specs, tuple):
         raise ValueError("prediction source specs need tuple")
     eta_sources: set[EtaSource] = set()
@@ -93,9 +94,7 @@ def validate_evaluated_event_sources(
         raise ValueError(f"missing evaluated event sources: {labels}")
     if not sources or sources[-1] != SOURCE_ENSEMBLE:
         raise ValueError("ensemble source must be last")
-    ordered_sources = tuple(
-        spec.event_source for spec in sorted(specs, key=lambda spec: spec.priority)
-    )
+    ordered_sources = tuple(spec.event_source for spec in sorted(specs, key=lambda spec: spec.priority))
     if sources != (*ordered_sources, SOURCE_ENSEMBLE):
         raise ValueError("evaluated event sources must follow prediction priority")
     return sources
@@ -111,36 +110,38 @@ def _is_plain_key(value: object) -> bool:
     )
 
 
-PREDICTION_SOURCE_SPECS = validate_prediction_source_specs((
-    PredictionSourceSpec(
-        EtaSource.YANDEX_CORRECTED,
-        SOURCE_CORRECTED_LIVE,
-        priority=0,
-        is_live=True,
-        early_conflict_eligible=True,
-    ),
-    PredictionSourceSpec(
-        EtaSource.YANDEX,
-        SOURCE_TARGET_STOP_LIVE,
-        priority=1,
-        is_live=True,
-        early_conflict_eligible=True,
-    ),
-    PredictionSourceSpec(
-        EtaSource.VEHICLE_PROGRESS,
-        SOURCE_VEHICLE_PROGRESS,
-        priority=2,
-        is_live=False,
-        early_conflict_eligible=True,
-    ),
-    PredictionSourceSpec(
-        EtaSource.YANDEX_HISTORY,
-        SOURCE_HISTORY_HEADWAY,
-        priority=3,
-        is_live=False,
-        early_conflict_eligible=False,
-    ),
-))
+PREDICTION_SOURCE_SPECS = validate_prediction_source_specs(
+    (
+        PredictionSourceSpec(
+            EtaSource.YANDEX_CORRECTED,
+            SOURCE_CORRECTED_LIVE,
+            priority=0,
+            is_live=True,
+            early_conflict_eligible=True,
+        ),
+        PredictionSourceSpec(
+            EtaSource.YANDEX,
+            SOURCE_TARGET_STOP_LIVE,
+            priority=1,
+            is_live=True,
+            early_conflict_eligible=True,
+        ),
+        PredictionSourceSpec(
+            EtaSource.VEHICLE_PROGRESS,
+            SOURCE_VEHICLE_PROGRESS,
+            priority=2,
+            is_live=False,
+            early_conflict_eligible=True,
+        ),
+        PredictionSourceSpec(
+            EtaSource.YANDEX_HISTORY,
+            SOURCE_HISTORY_HEADWAY,
+            priority=3,
+            is_live=False,
+            early_conflict_eligible=False,
+        ),
+    )
+)
 
 SOURCE_PRIORITY_BY_ETA_SOURCE = {spec.eta_source: spec.priority for spec in PREDICTION_SOURCE_SPECS}
 EVENT_SOURCE_BY_ETA_SOURCE = {spec.eta_source: spec.event_source for spec in PREDICTION_SOURCE_SPECS}
@@ -154,10 +155,13 @@ EARLY_CONFLICT_ETA_SOURCES = frozenset(
 EARLY_CONFLICT_EVENT_SOURCES = frozenset(
     spec.event_source for spec in PREDICTION_SOURCE_SPECS if spec.early_conflict_eligible
 )
-EVALUATED_EVENT_SOURCES = validate_evaluated_event_sources((
-    SOURCE_CORRECTED_LIVE,
-    SOURCE_TARGET_STOP_LIVE,
-    SOURCE_VEHICLE_PROGRESS,
-    SOURCE_HISTORY_HEADWAY,
-    SOURCE_ENSEMBLE,
-), PREDICTION_SOURCE_SPECS)
+EVALUATED_EVENT_SOURCES = validate_evaluated_event_sources(
+    (
+        SOURCE_CORRECTED_LIVE,
+        SOURCE_TARGET_STOP_LIVE,
+        SOURCE_VEHICLE_PROGRESS,
+        SOURCE_HISTORY_HEADWAY,
+        SOURCE_ENSEMBLE,
+    ),
+    PREDICTION_SOURCE_SPECS,
+)

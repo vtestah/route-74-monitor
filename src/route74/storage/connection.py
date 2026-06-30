@@ -8,7 +8,6 @@ from pathlib import Path
 
 from route74.domain.runtime_sources import BOT_EVENT_USER_REPLY, RUNTIME_SOURCE_WEB_APP
 
-
 DEFAULT_DB = Path("data/route74.sqlite")
 SQLITE_BUSY_TIMEOUT_MS = 30_000
 SQLITE_TIMEOUT_SECONDS = SQLITE_BUSY_TIMEOUT_MS / 1000
@@ -360,9 +359,11 @@ def init_db(connection: sqlite3.Connection) -> None:
         """
     )
     connection.commit()
-    from route74.storage.forecast_sample_windows import backfill_yandex_forecast_sample_windows
-    from route74.storage.forecast_samples import backfill_yandex_forecast_samples
     from route74.storage.eta_quality import sanitize_untrusted_eta
+    from route74.storage.forecast_sample_windows import (
+        backfill_yandex_forecast_sample_windows,
+    )
+    from route74.storage.forecast_samples import backfill_yandex_forecast_samples
     from route74.storage.report_windows import backfill_report_window_snapshots
 
     backfill_yandex_forecast_samples(connection)
@@ -387,10 +388,7 @@ def load_schema_migrations(connection: sqlite3.Connection) -> tuple[sqlite3.Row,
 
 
 def _apply_schema_migrations(connection: sqlite3.Connection) -> None:
-    applied = {
-        int(row["version"])
-        for row in connection.execute("SELECT version FROM schema_migrations").fetchall()
-    }
+    applied = {int(row["version"]) for row in connection.execute("SELECT version FROM schema_migrations").fetchall()}
     for version, name, migration in _SCHEMA_MIGRATIONS:
         if version in applied:
             continue
@@ -468,10 +466,7 @@ def _create_vehicle_progress_tracks_table(connection: sqlite3.Connection) -> Non
 
 
 def _ensure_yandex_forecast_sample_columns(connection: sqlite3.Connection) -> None:
-    existing = {
-        str(row["name"])
-        for row in connection.execute("PRAGMA table_info(yandex_forecast_samples)").fetchall()
-    }
+    existing = {str(row["name"]) for row in connection.execute("PRAGMA table_info(yandex_forecast_samples)").fetchall()}
     for name, definition in _YANDEX_FORECAST_SAMPLE_MIGRATIONS:
         if name not in existing:
             connection.execute(f"ALTER TABLE yandex_forecast_samples ADD COLUMN {name} {definition}")
@@ -490,10 +485,7 @@ _YANDEX_FORECAST_SAMPLE_MIGRATIONS = (
 
 
 def _ensure_prediction_event_columns(connection: sqlite3.Connection) -> None:
-    existing = {
-        str(row["name"])
-        for row in connection.execute("PRAGMA table_info(prediction_events)").fetchall()
-    }
+    existing = {str(row["name"]) for row in connection.execute("PRAGMA table_info(prediction_events)").fetchall()}
     if "runtime_source" not in existing:
         connection.execute("ALTER TABLE prediction_events ADD COLUMN runtime_source TEXT NOT NULL DEFAULT ''")
     rows = connection.execute(
@@ -526,10 +518,7 @@ def _prediction_event_runtime_source(raw_json: object) -> str:
 
 
 def _ensure_bot_interaction_event_columns(connection: sqlite3.Connection) -> None:
-    existing = {
-        str(row["name"])
-        for row in connection.execute("PRAGMA table_info(bot_interaction_events)").fetchall()
-    }
+    existing = {str(row["name"]) for row in connection.execute("PRAGMA table_info(bot_interaction_events)").fetchall()}
     if "event_kind" not in existing:
         connection.execute(
             f"ALTER TABLE bot_interaction_events ADD COLUMN event_kind TEXT NOT NULL DEFAULT '{BOT_EVENT_USER_REPLY}'"
@@ -545,7 +534,11 @@ def _ensure_bot_interaction_event_columns(connection: sqlite3.Connection) -> Non
 
 
 _SCHEMA_MIGRATIONS: tuple[SchemaMigration, ...] = (
-    (1, "ensure_yandex_forecast_sample_traffic_columns", _ensure_yandex_forecast_sample_columns),
+    (
+        1,
+        "ensure_yandex_forecast_sample_traffic_columns",
+        _ensure_yandex_forecast_sample_columns,
+    ),
     (2, "ensure_prediction_event_runtime_source", _ensure_prediction_event_columns),
     (3, "create_yandex_canary_runs", _create_yandex_canary_table),
     (4, "create_bot_interaction_events", _create_bot_interaction_table),

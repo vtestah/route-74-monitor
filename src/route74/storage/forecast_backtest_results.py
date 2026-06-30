@@ -4,7 +4,6 @@ from dataclasses import dataclass
 
 from route74.domain.yandex_history import DEFAULT_HISTORY_PERCENTILE
 
-
 DEFAULT_FORECAST_BACKTEST_PERCENTILES = (70, DEFAULT_HISTORY_PERCENTILE, 90)
 FORECAST_BACKTEST_PERCENTILES_ERROR = "expected percentiles from 1 to 100"
 
@@ -72,18 +71,19 @@ def selected_forecast_backtest_result(
     return reference
 
 
-def best_forecast_backtest_result(summary: ForecastBacktestSummary) -> ForecastBacktestResult | None:
+def best_forecast_backtest_result(
+    summary: ForecastBacktestSummary,
+) -> ForecastBacktestResult | None:
     if not summary.results:
         return None
     return min(summary.results, key=_backtest_score)
 
 
-def validate_forecast_backtest_percentiles(percentiles: tuple[int, ...]) -> tuple[int, ...]:
+def validate_forecast_backtest_percentiles(
+    percentiles: tuple[int, ...],
+) -> tuple[int, ...]:
     if not percentiles or any(
-        isinstance(percentile, bool)
-        or not isinstance(percentile, int)
-        or percentile <= 0
-        or percentile > 100
+        isinstance(percentile, bool) or not isinstance(percentile, int) or percentile <= 0 or percentile > 100
         for percentile in percentiles
     ):
         raise ValueError(FORECAST_BACKTEST_PERCENTILES_ERROR)

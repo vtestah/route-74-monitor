@@ -12,7 +12,6 @@ from route74.storage.connection import DEFAULT_DB, connect, connect_readonly
 from route74.storage.helpers import count_table_rows
 from route74.storage.models import CountByKey
 
-
 BACKUP_KEEP_COUNT = 14
 DB_TABLES = (
     "yandex_snapshots",
@@ -181,7 +180,10 @@ def _prune_backups(directory: Path, *, keep: int) -> tuple[Path, ...]:
 
 def _latest_timestamps(connection: sqlite3.Connection) -> tuple[DbLatestTimestamp, ...]:
     return (
-        DbLatestTimestamp("yandex_snapshots", _latest_value(connection, "yandex_snapshots", "sampled_at")),
+        DbLatestTimestamp(
+            "yandex_snapshots",
+            _latest_value(connection, "yandex_snapshots", "sampled_at"),
+        ),
         DbLatestTimestamp(
             "yandex_forecast_samples",
             _latest_value(connection, "yandex_forecast_samples", "sampled_at"),
@@ -191,9 +193,18 @@ def _latest_timestamps(connection: sqlite3.Connection) -> tuple[DbLatestTimestam
             _latest_value(connection, "report_window_snapshots", "sampled_at"),
         ),
         DbLatestTimestamp("arrival_events", _latest_value(connection, "arrival_events", "arrived_at")),
-        DbLatestTimestamp("prediction_events", _latest_value(connection, "prediction_events", "sampled_at")),
-        DbLatestTimestamp("yandex_canary_runs", _latest_value(connection, "yandex_canary_runs", "checked_at")),
-        DbLatestTimestamp("bot_interaction_events", _latest_value(connection, "bot_interaction_events", "received_at")),
+        DbLatestTimestamp(
+            "prediction_events",
+            _latest_value(connection, "prediction_events", "sampled_at"),
+        ),
+        DbLatestTimestamp(
+            "yandex_canary_runs",
+            _latest_value(connection, "yandex_canary_runs", "checked_at"),
+        ),
+        DbLatestTimestamp(
+            "bot_interaction_events",
+            _latest_value(connection, "bot_interaction_events", "received_at"),
+        ),
         DbLatestTimestamp("collector_runs", _latest_value(connection, "collector_runs", "started_at")),
     )
 

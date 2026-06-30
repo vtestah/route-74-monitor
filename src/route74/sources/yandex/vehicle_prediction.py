@@ -16,7 +16,6 @@ from route74.sources.yandex.models import (
 )
 from route74.sources.yandex.parser.coordinates import coord_pair
 
-
 MAX_REASONABLE_PREDICTION_MINUTES = 180
 THREAD_MATCH = "match"
 THREAD_MISSING = "missing"
@@ -115,9 +114,7 @@ def parse_vehicle_prediction_payload(
             raw_status=raw_status,
         )
     vehicles = tuple(candidate.vehicle for candidate in selected)
-    arrivals = tuple(
-        sorted({item.arrival_minutes for item in vehicles if item.arrival_minutes is not None})
-    )
+    arrivals = tuple(sorted({item.arrival_minutes for item in vehicles if item.arrival_minutes is not None}))
     return YandexLiveForecast(
         enabled=True,
         available=True,
@@ -151,9 +148,19 @@ def _select_candidates(
     if matched:
         return matched, EtaConfidence.HIGH, "vehicle_prediction", "vehicle_prediction"
     if not expected_threads:
-        return tuple(candidates), EtaConfidence.HIGH, "vehicle_prediction", "vehicle_prediction"
+        return (
+            tuple(candidates),
+            EtaConfidence.HIGH,
+            "vehicle_prediction",
+            "vehicle_prediction",
+        )
     reason = _thread_fallback_reason(candidates, expected_threads)
-    return tuple(candidates), EtaConfidence.LOW, reason, "vehicle_prediction_thread_fallback"
+    return (
+        tuple(candidates),
+        EtaConfidence.LOW,
+        reason,
+        "vehicle_prediction_thread_fallback",
+    )
 
 
 def _thread_fallback_reason(candidates: list[_PredictionCandidate], expected_threads: set[str]) -> str:
@@ -163,7 +170,9 @@ def _thread_fallback_reason(candidates: list[_PredictionCandidate], expected_thr
     return f"vehicle_prediction_thread_fallback:{detail}:{expected}"
 
 
-def _coordinate_vehicles(predictions: list[dict[str, Any]]) -> tuple[YandexVehicle, ...]:
+def _coordinate_vehicles(
+    predictions: list[dict[str, Any]],
+) -> tuple[YandexVehicle, ...]:
     vehicles: list[YandexVehicle] = []
     for index, prediction in enumerate(predictions):
         lat, lng = _coordinates(prediction)
@@ -181,7 +190,9 @@ def _coordinate_vehicles(predictions: list[dict[str, Any]]) -> tuple[YandexVehic
     return tuple(vehicles)
 
 
-def _coordinate_vehicles_from_candidates(candidates: tuple[_PredictionCandidate, ...]) -> tuple[YandexVehicle, ...]:
+def _coordinate_vehicles_from_candidates(
+    candidates: tuple[_PredictionCandidate, ...],
+) -> tuple[YandexVehicle, ...]:
     return tuple(
         replace(candidate.vehicle, arrival_minutes=None, age_seconds=0)
         for candidate in candidates

@@ -6,7 +6,11 @@ from datetime import datetime, timedelta
 from route74.domain.commute import CommuteProfile
 from route74.sources.yandex.browser_client import ReusableChromium, YandexBrowserClient
 from route74.sources.yandex.config import YandexSourceConfig
-from route74.sources.yandex.fallback_policy import better_fallback, browser_result_is_final, http_result_is_final
+from route74.sources.yandex.fallback_policy import (
+    better_fallback,
+    browser_result_is_final,
+    http_result_is_final,
+)
 from route74.sources.yandex.health import YandexSourceHealth
 from route74.sources.yandex.http_client import YandexHttpClient
 from route74.sources.yandex.line import YandexLineTopology, parse_line_payload
@@ -141,7 +145,9 @@ class YandexTransportSource:
             )
         return YandexLiveForecast.unavailable(status=YandexSourceStatus.UNAVAILABLE, reason="no_source")
 
-    def _fetch_http(self, profile: CommuteProfile, current_time: datetime, diagnostics: list[str]) -> YandexLiveForecast:
+    def _fetch_http(
+        self, profile: CommuteProfile, current_time: datetime, diagnostics: list[str]
+    ) -> YandexLiveForecast:
         with YandexHttpClient(timeout_seconds=self._config.timeout_seconds) as client:
             raw = client.get_vehicles_info(profile)
         forecast = forecast_from_raw(raw, YandexSourceMethod.HTTP, current_time, profile)

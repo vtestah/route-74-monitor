@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import sys
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
@@ -11,7 +10,10 @@ from route74.domain.profiles import PROFILE_KEYS
 from route74.domain.runtime_sources import BOT_EVENT_USER_REPLY
 from route74.models import now_local
 from route74.storage import connect, init_db
-from route74.storage.forecast_backtest import best_forecast_backtest_result, selected_forecast_backtest_result
+from route74.storage.forecast_backtest import (
+    best_forecast_backtest_result,
+    selected_forecast_backtest_result,
+)
 from route74.storage.forecast_health import ForecastHealthSummary, ForecastWindowHealth
 from route74.storage.monitoring import (
     MONITOR_CRITICAL,
@@ -33,8 +35,11 @@ from route74.support_actions import (
     watch_state_command_for_path,
 )
 from route74.support_triage import TRIAGE_KEY_PRIORITY
-from route74.watch_state import DEFAULT_WATCH_STATE_PATH, WatchStateSummary, summarize_watch_state
-
+from route74.watch_state import (
+    DEFAULT_WATCH_STATE_PATH,
+    WatchStateSummary,
+    summarize_watch_state,
+)
 
 FAIL_CHOICES = ("never", MONITOR_WARNING, MONITOR_CRITICAL)
 MONITOR_ACTIONS = {
@@ -222,7 +227,7 @@ def format_monitor_summary(
             f"monitor{_scope_text(profile_key)} status={_combined_status(issues)} "
             f"warnings={_issue_count(issues, MONITOR_WARNING)} "
             f"criticals={_issue_count(issues, MONITOR_CRITICAL)} "
-            f"next=\"{next_action}\" "
+            f'next="{next_action}" '
             f"db={db_path}"
         ),
         (
@@ -239,8 +244,7 @@ def format_monitor_summary(
         ),
     ]
     lines.extend(
-        f"- {issue.severity} {issue.key}{_issue_profile_text(issue.profile_key)}: {issue.message}"
-        for issue in issues
+        f"- {issue.severity} {issue.key}{_issue_profile_text(issue.profile_key)}: {issue.message}" for issue in issues
     )
     return "\n".join(lines)
 
@@ -264,10 +268,7 @@ def runtime_calibration_signal(summary: MonitorSummary) -> str:
     calibration = summary.calibration
     if calibration is None:
         return "bot_calibration:-"
-    return (
-        f"bot_calibration:{calibration.status} "
-        f"bot_suggested_buffer:+{calibration.suggested_buffer_minutes}m"
-    )
+    return f"bot_calibration:{calibration.status} bot_suggested_buffer:+{calibration.suggested_buffer_minutes}m"
 
 
 def history_signal(summary: MonitorSummary) -> str:
@@ -417,9 +418,7 @@ def _issue_action(
             fallback=fallback,
         )
     if issue.profile_key and (
-        issue.key.startswith("forecast_")
-        or issue.key.startswith("truth_")
-        or issue.key.startswith("bot_runtime_")
+        issue.key.startswith("forecast_") or issue.key.startswith("truth_") or issue.key.startswith("bot_runtime_")
     ):
         return _profile_action(
             issue.profile_key,
@@ -485,7 +484,9 @@ def _scoped_issues(issues: tuple[MonitorIssue, ...], profile_key: str | None) ->
     return tuple(issue for issue in issues if not issue.profile_key or issue.profile_key == profile_key)
 
 
-def _watch_state_issues(watch_state: WatchStateSummary | None) -> tuple[MonitorIssue, ...]:
+def _watch_state_issues(
+    watch_state: WatchStateSummary | None,
+) -> tuple[MonitorIssue, ...]:
     if watch_state is None:
         return ()
     issues: list[MonitorIssue] = []

@@ -11,14 +11,25 @@ from route74.domain.reporting import matching_report_window
 from route74.models import now_local
 from route74.sources.yandex.freshness import effective_forecast_age_seconds
 from route74.sources.yandex.models import YandexLiveForecast
-from route74.sources.yandex.trust import is_trusted_eta_observation, trusted_arrivals_for_forecast
+from route74.sources.yandex.trust import (
+    is_trusted_eta_observation,
+    trusted_arrivals_for_forecast,
+)
 from route74.storage.collector_runs import summarize_collector_runs
 from route74.storage.forecast_samples import insert_yandex_forecast_sample
 from route74.storage.heartbeat import load_collector_heartbeat
-from route74.storage.helpers import arrival_minutes_from_json, count_rows, count_table_rows, optional_int_value
-from route74.storage.models import RouteTrafficSnapshot, YandexObservation, YandexTelemetrySummary
+from route74.storage.helpers import (
+    arrival_minutes_from_json,
+    count_rows,
+    count_table_rows,
+    optional_int_value,
+)
+from route74.storage.models import (
+    RouteTrafficSnapshot,
+    YandexObservation,
+    YandexTelemetrySummary,
+)
 from route74.storage.report_windows import insert_report_window_snapshot
-
 
 SQLITE_IN_CHUNK_SIZE = 500
 
@@ -116,7 +127,9 @@ def insert_yandex_snapshot(
             report_window=report_window,
             traffic=traffic,
         )
-    from route74.storage.prediction_lab import process_yandex_snapshot_for_prediction_lab
+    from route74.storage.prediction_lab import (
+        process_yandex_snapshot_for_prediction_lab,
+    )
 
     process_yandex_snapshot_for_prediction_lab(
         connection,
@@ -165,7 +178,9 @@ def count_yandex_observations(connection: sqlite3.Connection) -> int:
     return count_table_rows(connection, "yandex_vehicle_observations")
 
 
-def latest_yandex_snapshot_sampled_at(connection: sqlite3.Connection) -> datetime | None:
+def latest_yandex_snapshot_sampled_at(
+    connection: sqlite3.Connection,
+) -> datetime | None:
     rows = connection.execute(
         """
         SELECT sampled_at

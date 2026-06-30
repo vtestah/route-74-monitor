@@ -5,7 +5,11 @@ from dataclasses import dataclass
 from typing import Any
 from urllib.parse import urlparse
 
-from route74.sources.yandex.browser_client import capture_prediction_response, click_vehicle_markers, launch_chromium
+from route74.sources.yandex.browser_client import (
+    capture_prediction_response,
+    click_vehicle_markers,
+    launch_chromium,
+)
 from route74.sources.yandex.browser_rate_limit import run_with_browser_slot
 from route74.sources.yandex.constants import YANDEX_USER_AGENT
 

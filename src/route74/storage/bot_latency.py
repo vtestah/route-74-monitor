@@ -17,7 +17,6 @@ from route74.storage.connection import connect, init_db
 from route74.storage.helpers import count_rows, optional_int_value
 from route74.storage.models import CountByKey, percent
 
-
 NO_ETA_REPLY_SOURCE = "no_eta"
 ERROR_CATEGORY_PREFIXES = (
     "followup_send_error",
@@ -50,7 +49,13 @@ class BotInteractionEvent:
         _ensure_aware_datetime("received_at", self.received_at)
         if isinstance(self.chat_id, bool) or not isinstance(self.chat_id, int):
             raise ValueError("bot interaction chat_id needs integer")
-        for field_name in ("update_type", "event_kind", "reply_source", "yandex_source_method", "status"):
+        for field_name in (
+            "update_type",
+            "event_kind",
+            "reply_source",
+            "yandex_source_method",
+            "status",
+        ):
             _ensure_plain_key(field_name, getattr(self, field_name))
         if self.event_kind not in BOT_EVENT_KINDS:
             allowed = ", ".join(sorted(BOT_EVENT_KINDS))
@@ -183,9 +188,7 @@ def summarize_bot_latency(
     no_eta_reason_column = (
         "no_eta_reason" if _has_bot_interaction_column(connection, "no_eta_reason") else "'' AS no_eta_reason"
     )
-    event_kind_column = (
-        "event_kind" if has_event_kind_column else f"'{BOT_EVENT_USER_REPLY}' AS event_kind"
-    )
+    event_kind_column = "event_kind" if has_event_kind_column else f"'{BOT_EVENT_USER_REPLY}' AS event_kind"
     raw_rows = connection.execute(
         f"""
         SELECT received_at, total_ms, forecast_ms, render_ms, send_ms, status, update_type,
@@ -206,20 +209,10 @@ def summarize_bot_latency(
     update_types = Counter(str(row["update_type"]) for row in rows)
     event_kinds = Counter(str(row["event_kind"]) for row in rows)
     reply_sources = Counter(str(row["reply_source"]) for row in rows)
-    error_reasons = Counter(
-        _safe_error_key(row["error"])
-        for row in rows
-        if str(row["status"]) != "ok"
-    )
-    error_categories = Counter(
-        _safe_error_category(row["error"])
-        for row in rows
-        if str(row["status"]) != "ok"
-    )
+    error_reasons = Counter(_safe_error_key(row["error"]) for row in rows if str(row["status"]) != "ok")
+    error_categories = Counter(_safe_error_category(row["error"]) for row in rows if str(row["status"]) != "ok")
     no_eta_reasons = Counter(
-        _safe_no_eta_reason_key(row["no_eta_reason"])
-        for row in rows
-        if str(row["reply_source"]) == NO_ETA_REPLY_SOURCE
+        _safe_no_eta_reason_key(row["no_eta_reason"]) for row in rows if str(row["reply_source"]) == NO_ETA_REPLY_SOURCE
     )
     return BotLatencySummary(
         hours=window_hours,
@@ -265,11 +258,7 @@ def _percentile(values: tuple[int, ...], percentile: int) -> int | None:
 
 
 def _duration_values(rows: Iterable[sqlite3.Row], column: str) -> tuple[int, ...]:
-    return tuple(
-        duration
-        for row in rows
-        if (duration := _nonnegative_int(row[column])) is not None
-    )
+    return tuple(duration for row in rows if (duration := _nonnegative_int(row[column])) is not None)
 
 
 _DURATION_COLUMNS = ("forecast_ms", "render_ms", "send_ms", "total_ms")
@@ -435,8 +424,7 @@ def _safe_no_eta_reason_key(reason: object) -> str:
 
 def _has_bot_interaction_column(connection: sqlite3.Connection, column_name: str) -> bool:
     return column_name in {
-        str(row["name"])
-        for row in connection.execute("PRAGMA table_info(bot_interaction_events)").fetchall()
+        str(row["name"]) for row in connection.execute("PRAGMA table_info(bot_interaction_events)").fetchall()
     }
 
 

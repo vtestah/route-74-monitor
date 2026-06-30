@@ -5,10 +5,16 @@ from dataclasses import dataclass
 from ipaddress import ip_address
 from pathlib import Path
 
-from route74.env import DEFAULT_ENV_PATH, ENV_DB_PATH, ENV_FILE, env_value, load_env_file, parse_bool_env
+from route74.env import (
+    DEFAULT_ENV_PATH,
+    ENV_DB_PATH,
+    ENV_FILE,
+    env_value,
+    load_env_file,
+    parse_bool_env,
+)
 from route74.storage import DEFAULT_DB
 from route74.watch_state import DEFAULT_WATCH_STATE_PATH
-
 
 ENV_WEB_HOST = "ROUTE74_WEB_HOST"
 ENV_WEB_PORT = "ROUTE74_WEB_PORT"
@@ -49,7 +55,9 @@ def parse_web_config(argv: list[str] | None = None) -> WebConfig:
     host = args.host if args.host is not None else _env_host(file_env)
     port = args.port if args.port is not None else _env_port(file_env)
     db_path = args.db or Path(_env_value(ENV_DB_PATH, file_env, str(DEFAULT_DB)))
-    watch_state_path = args.watch_state_path or Path(_env_value(ENV_WEB_WATCH_STATE_PATH, file_env, str(DEFAULT_WATCH_STATE_PATH)))
+    watch_state_path = args.watch_state_path or Path(
+        _env_value(ENV_WEB_WATCH_STATE_PATH, file_env, str(DEFAULT_WATCH_STATE_PATH))
+    )
     allow_public = parse_bool_env(
         ENV_WEB_ALLOW_PUBLIC,
         _optional_env_value(ENV_WEB_ALLOW_PUBLIC, file_env),

@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 
 from route74.sources.yandex.models import YandexSourceMethod, YandexSourceStatus
 
-
 COOLDOWN_STATUSES = {
     YandexSourceStatus.EMPTY,
     YandexSourceStatus.TIMEOUT,

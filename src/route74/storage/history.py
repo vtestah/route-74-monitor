@@ -209,7 +209,10 @@ def _history_params(
     report_window_key: str | None,
     before: datetime | None,
 ) -> tuple[object, ...]:
-    params: list[object] = [profile_key, (current_time - timedelta(days=days)).isoformat()]
+    params: list[object] = [
+        profile_key,
+        (current_time - timedelta(days=days)).isoformat(),
+    ]
     if report_window_key is not None:
         params.append(report_window_key)
     if before is not None:
@@ -247,7 +250,10 @@ def _counts_params(
     weekdays: tuple[int, ...] | None,
     report_window_key: str | None,
 ) -> tuple[object, ...]:
-    params: list[object] = [profile_key, (current_time - timedelta(days=days)).isoformat()]
+    params: list[object] = [
+        profile_key,
+        (current_time - timedelta(days=days)).isoformat(),
+    ]
     if report_window_key is not None:
         params.append(report_window_key)
     if weekdays is not None:
@@ -304,7 +310,9 @@ def _optional_datetime(value: object) -> datetime | None:
         return None
 
 
-def _normalized_arrivals(rows: tuple[sqlite3.Row, ...]) -> tuple[tuple[int, ...], set[str]]:
+def _normalized_arrivals(
+    rows: tuple[sqlite3.Row, ...],
+) -> tuple[tuple[int, ...], set[str]]:
     groups: dict[tuple[str, int], list[int]] = {}
     for row in rows:
         key = _forecast_slot_key(row)

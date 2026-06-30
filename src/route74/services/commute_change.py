@@ -9,8 +9,10 @@ from route74.domain.commute_change import DepartureChange
 from route74.domain.runtime_sources import BOT_EVENT_USER_REPLY
 from route74.storage.connection import DEFAULT_DB, connect_readonly
 from route74.storage.errors import STORAGE_READ_ERRORS
-from route74.storage.runtime_quality import BotRuntimePrediction, load_recent_bot_runtime_predictions
-
+from route74.storage.runtime_quality import (
+    BotRuntimePrediction,
+    load_recent_bot_runtime_predictions,
+)
 
 DEFAULT_CHANGE_LOOKBACK_HOURS = 3
 DEFAULT_CHANGE_MAX_AGE_MINUTES = 90
@@ -102,9 +104,7 @@ def build_runtime_prediction_change_map(
         raise ValueError("runtime prediction change max_age_minutes must be positive")
     max_age = timedelta(minutes=max_age_minutes)
     current_by_id = {
-        prediction.id: prediction
-        for prediction in current_predictions
-        if prediction.event_kind == event_kind
+        prediction.id: prediction for prediction in current_predictions if prediction.event_kind == event_kind
     }
     if not current_by_id:
         return {}
@@ -143,7 +143,10 @@ def _nearest_previous_prediction(
     )
     if not previous_candidates:
         return None
-    return max(previous_candidates, key=lambda prediction: (prediction.sampled_at, prediction.id))
+    return max(
+        previous_candidates,
+        key=lambda prediction: (prediction.sampled_at, prediction.id),
+    )
 
 
 def _prediction_arrival_at(prediction: BotRuntimePrediction) -> datetime | None:

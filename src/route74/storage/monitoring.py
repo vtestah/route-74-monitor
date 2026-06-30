@@ -26,7 +26,10 @@ from route74.storage.forecast_backtest import (
     selected_forecast_backtest_result,
     summarize_yandex_forecast_backtest,
 )
-from route74.storage.forecast_health import ForecastHealthSummary, summarize_forecast_health
+from route74.storage.forecast_health import (
+    ForecastHealthSummary,
+    summarize_forecast_health,
+)
 from route74.storage.forecast_readiness import summarize_yandex_forecast_readiness
 from route74.storage.helpers import WEEKDAYS
 from route74.storage.models import CountByKey, ForecastReadinessSummary
@@ -37,7 +40,6 @@ from route74.storage.runtime_quality import (
     summarize_bot_runtime_calibration,
     summarize_bot_runtime_predictions,
 )
-
 
 MONITOR_OK = "ok"
 MONITOR_WARNING = "warning"
@@ -78,9 +80,7 @@ class MonitorSummary:
     backtest: ForecastBacktestSummary | None = None
 
     def __post_init__(self) -> None:
-        if not isinstance(self.issues, tuple) or any(
-            not isinstance(issue, MonitorIssue) for issue in self.issues
-        ):
+        if not isinstance(self.issues, tuple) or any(not isinstance(issue, MonitorIssue) for issue in self.issues):
             raise ValueError("monitor summary issues need tuple of MonitorIssue")
         if self.readiness is not None and not isinstance(self.readiness, ForecastReadinessSummary):
             raise ValueError("monitor summary readiness needs ForecastReadinessSummary or None")
@@ -371,7 +371,9 @@ def _profile_readiness_summary(
     )
 
 
-def _history_readiness_issues(readiness: ForecastReadinessSummary | None) -> tuple[MonitorIssue, ...]:
+def _history_readiness_issues(
+    readiness: ForecastReadinessSummary | None,
+) -> tuple[MonitorIssue, ...]:
     if readiness is None or readiness.ready:
         return ()
     latest = readiness.latest_sampled_at.strftime("%Y-%m-%d %H:%M") if readiness.latest_sampled_at else "-"
@@ -601,9 +603,7 @@ def _runtime_guardrail_issues(
         if group.guardrail_unavailable < warn_guardrail_unavailable:
             continue
         severity = (
-            MONITOR_CRITICAL
-            if group.guardrail_unavailable >= critical_guardrail_unavailable
-            else MONITOR_WARNING
+            MONITOR_CRITICAL if group.guardrail_unavailable >= critical_guardrail_unavailable else MONITOR_WARNING
         )
         issues.append(
             MonitorIssue(
@@ -721,7 +721,9 @@ def _runtime_p50_error_issues(
     return tuple(issues)
 
 
-def _runtime_calibration_issues(calibration: BotRuntimeCalibration) -> tuple[MonitorIssue, ...]:
+def _runtime_calibration_issues(
+    calibration: BotRuntimeCalibration,
+) -> tuple[MonitorIssue, ...]:
     late_risk_groups = tuple(group for group in calibration.by_profile if group.status == "late_risk")
     late_risk_profiles = frozenset(str(getattr(group, "key", "") or "") for group in late_risk_groups)
     source_issues = tuple(
@@ -787,7 +789,8 @@ def _top_calibration_source_group(groups: object, profile_key: str) -> str:
     if not isinstance(groups, tuple):
         return "-"
     candidates = [
-        group for group in groups
+        group
+        for group in groups
         if _profile_source_key(getattr(group, "key", ""))[0] == profile_key
         and getattr(group, "status", "") == "late_risk"
     ]
@@ -802,10 +805,7 @@ def _top_calibration_source_group(groups: object, profile_key: str) -> str:
         ),
     )
     _profile, source = _profile_source_key(getattr(top, "key", ""))
-    return (
-        f"{source or '-'}:{getattr(top, 'suggested_buffer_minutes', 0)}m/"
-        f"{getattr(top, 'miss_rate_percent', 0)}%"
-    )
+    return f"{source or '-'}:{getattr(top, 'suggested_buffer_minutes', 0)}m/{getattr(top, 'miss_rate_percent', 0)}%"
 
 
 def _source_calibration_priority(group: object) -> tuple[int, int, int]:
@@ -824,7 +824,9 @@ def _profile_source_key(value: object) -> tuple[str, str]:
     return profile, source
 
 
-def _runtime_profile_groups(groups: object) -> tuple[BotRuntimePredictionQualityGroup, ...]:
+def _runtime_profile_groups(
+    groups: object,
+) -> tuple[BotRuntimePredictionQualityGroup, ...]:
     if not isinstance(groups, tuple):
         return ()
     return tuple(

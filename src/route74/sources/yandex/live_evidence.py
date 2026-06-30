@@ -3,8 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from route74.sources.yandex.freshness import vehicle_is_fresh
-from route74.sources.yandex.models import YandexLiveForecast, YandexSourceMethod, YandexVehicle
-
+from route74.sources.yandex.models import (
+    YandexLiveForecast,
+    YandexSourceMethod,
+    YandexVehicle,
+)
 
 SHORT_LIVE_ETA_MAX_MINUTES = 8
 STOP_INFO_NO_COORDINATE_BUFFER_MINUTES = 3
@@ -80,28 +83,19 @@ def _matching_eta_vehicles(
 
 def _has_fresh_coordinates(vehicles: tuple[YandexVehicle, ...]) -> bool:
     return any(
-        vehicle.lat is not None
-        and vehicle.lng is not None
-        and vehicle_is_fresh(vehicle)
-        for vehicle in vehicles
+        vehicle.lat is not None and vehicle.lng is not None and vehicle_is_fresh(vehicle) for vehicle in vehicles
     )
 
 
 def _is_short_arrival_minutes(value: object) -> bool:
-    return (
-        isinstance(value, int)
-        and not isinstance(value, bool)
-        and 0 <= value <= SHORT_LIVE_ETA_MAX_MINUTES
-    )
+    return isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= SHORT_LIVE_ETA_MAX_MINUTES
 
 
 def _validate_scope(value: object) -> None:
     if not isinstance(value, str):
         raise ValueError("live ETA evidence scope needs text")
     if value and (
-        value != value.strip()
-        or not value.isascii()
-        or any(not (char.isalnum() or char == "_") for char in value)
+        value != value.strip() or not value.isascii() or any(not (char.isalnum() or char == "_") for char in value)
     ):
         raise ValueError("live ETA evidence scope must be a plain key")
 

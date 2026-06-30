@@ -12,7 +12,6 @@ from route74.sources.yandex.browser_client import ReusableChromium, launch_chrom
 from route74.sources.yandex.browser_rate_limit import run_with_browser_slot
 from route74.sources.yandex.constants import YANDEX_USER_AGENT, route_traffic_url
 
-
 MAX_ROUTE_DURATION_SECONDS = 6 * 60 * 60
 MAX_ROUTE_DISTANCE_METERS = 100_000
 
@@ -70,7 +69,11 @@ class YandexRouteTrafficSource:
                     viewport={"width": 1280, "height": 900},
                 )
                 try:
-                    page.goto(page_url, wait_until="domcontentloaded", timeout=self._timeout_seconds * 1000)
+                    page.goto(
+                        page_url,
+                        wait_until="domcontentloaded",
+                        timeout=self._timeout_seconds * 1000,
+                    )
                     summaries = _wait_for_route_summaries(page, self._timeout_seconds)
                 finally:
                     _close_page(page)
@@ -84,7 +87,11 @@ class YandexRouteTrafficSource:
                         user_agent=YANDEX_USER_AGENT,
                         viewport={"width": 1280, "height": 900},
                     )
-                    page.goto(page_url, wait_until="domcontentloaded", timeout=self._timeout_seconds * 1000)
+                    page.goto(
+                        page_url,
+                        wait_until="domcontentloaded",
+                        timeout=self._timeout_seconds * 1000,
+                    )
                     summaries = _wait_for_route_summaries(page, self._timeout_seconds)
                 finally:
                     browser.close()
@@ -127,7 +134,9 @@ def traffic_from_route_summaries(
     )
 
 
-def _selected_summary(summaries: tuple[YandexRouteSummary, ...]) -> YandexRouteSummary | None:
+def _selected_summary(
+    summaries: tuple[YandexRouteSummary, ...],
+) -> YandexRouteSummary | None:
     for summary in summaries:
         if summary.active and _duration_seconds(summary.text) is not None:
             return summary

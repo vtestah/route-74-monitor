@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from datetime import datetime, time, timedelta, timezone
+from datetime import UTC, datetime, time, timedelta
 from math import isfinite
 from typing import Any
 
@@ -14,7 +14,6 @@ from route74.sources.yandex.models import (
     YandexSourceStatus,
     YandexVehicle,
 )
-
 
 MAX_REASONABLE_STOP_ETA_MINUTES = 180
 
@@ -200,7 +199,7 @@ def _minutes_until(raw_time: dict[str, Any], current_time: datetime) -> int | No
     if value is not None:
         timestamp = value / 1000 if value > 10_000_000_000 else value
         try:
-            event_time = datetime.fromtimestamp(timestamp, tz=timezone.utc).astimezone(current_time.tzinfo)
+            event_time = datetime.fromtimestamp(timestamp, tz=UTC).astimezone(current_time.tzinfo)
         except (OSError, OverflowError, ValueError):
             pass
         else:

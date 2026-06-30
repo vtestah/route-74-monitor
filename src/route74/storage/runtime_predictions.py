@@ -23,7 +23,6 @@ from route74.sources.yandex.models import YandexSourceMethod, YandexVehicle
 from route74.storage.connection import connect, init_db
 from route74.storage.runtime_quality import BOT_RUNTIME_SOURCE
 
-
 BOT_DECISION_DEDUPE_SECONDS = 20
 LATEST_SNAPSHOT_MAX_AGE_SECONDS = 180
 MAX_PREDICTED_ARRIVAL_SKEW_SECONDS = 60
@@ -119,7 +118,10 @@ def insert_bot_decision_prediction_event(
             "not_collected",
             None,
             BOT_RUNTIME_SOURCE,
-            json.dumps(_raw_payload(decision, vehicle, snapshot_id, event_kind), ensure_ascii=False),
+            json.dumps(
+                _raw_payload(decision, vehicle, snapshot_id, event_kind),
+                ensure_ascii=False,
+            ),
         ),
     )
     return BotDecisionPredictionResult(int(cursor.lastrowid), True, "created")
@@ -226,13 +228,14 @@ def _eta_estimate_minutes(decision: DepartureDecision, source: EtaSource) -> int
 
 def _vehicle_for_arrival_minutes(decision: DepartureDecision, arrival_minutes: int) -> YandexVehicle | None:
     candidates = tuple(
-        vehicle
-        for vehicle in decision.yandex_forecast.vehicles
-        if vehicle.arrival_minutes == arrival_minutes
+        vehicle for vehicle in decision.yandex_forecast.vehicles if vehicle.arrival_minutes == arrival_minutes
     )
     if not candidates:
         return None
-    return min(candidates, key=lambda vehicle: (vehicle.age_seconds is None, vehicle.age_seconds or 0))
+    return min(
+        candidates,
+        key=lambda vehicle: (vehicle.age_seconds is None, vehicle.age_seconds or 0),
+    )
 
 
 def _source_method(decision: DepartureDecision) -> str:

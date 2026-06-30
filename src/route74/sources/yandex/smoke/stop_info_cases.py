@@ -36,7 +36,14 @@ def run_stop_info_smoke() -> None:
     frequency = parse_stop_info_payload(
         _stop_info_payload(
             events=[],
-            frequencies=[{"text": "30\u00a0мин", "value": 1800, "begin": {"text": "06:51"}, "end": {"text": "21:11"}}],
+            frequencies=[
+                {
+                    "text": "30\u00a0мин",
+                    "value": 1800,
+                    "begin": {"text": "06:51"},
+                    "end": {"text": "21:11"},
+                }
+            ],
         ),
         profile=EVENING,
         current_time=current_time,
@@ -122,9 +129,15 @@ def _stop_info_payload(
                         {
                             "EssentialStops": [
                                 {"name": "Цветной проезд", "info": {"firstStop": True}},
-                                {"name": "Улица Твардовского", "info": {"lastStop": True}},
+                                {
+                                    "name": "Улица Твардовского",
+                                    "info": {"lastStop": True},
+                                },
                             ],
-                            "BriefSchedule": {"Events": events, "Frequencies": frequencies or []},
+                            "BriefSchedule": {
+                                "Events": events,
+                                "Frequencies": frequencies or [],
+                            },
                         }
                     ],
                 }

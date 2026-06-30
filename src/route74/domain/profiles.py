@@ -6,7 +6,6 @@ from datetime import time
 from route74.domain.commute import CommuteProfile
 from route74.domain.profile_registry import build_profile_registry
 
-
 MORNING = CommuteProfile(
     key="morning",
     title="Утром: Медицинский центр -> Академгородок / Цветной проезд",

@@ -21,27 +21,28 @@ from route74.services.yandex_history import (
 )
 from route74.storage import (
     DEFAULT_DB,
+    BotLatencySummary,
+    BotRuntimeCalibration,
+    BotRuntimePredictionQuality,
     ForecastReadinessSummary,
     YandexTelemetrySummary,
     connect,
     init_db,
-    summarize_yandex_forecast_readiness,
-    summarize_yandex_telemetry,
-)
-from route74.storage import (
-    BotLatencySummary,
-    BotRuntimeCalibration,
-    BotRuntimePredictionQuality,
     summarize_bot_latency,
     summarize_bot_runtime_calibration,
     summarize_bot_runtime_predictions,
+    summarize_yandex_forecast_readiness,
+    summarize_yandex_telemetry,
 )
 from route74.storage.forecast_backtest import (
     DEFAULT_FORECAST_BACKTEST_PERCENTILES,
     ForecastBacktestSummary,
     summarize_yandex_forecast_backtest,
 )
-from route74.storage.forecast_health import ForecastHealthSummary, summarize_forecast_health
+from route74.storage.forecast_health import (
+    ForecastHealthSummary,
+    summarize_forecast_health,
+)
 from route74.storage.helpers import WEEKDAYS
 from route74.storage.monitoring import summarize_monitor
 from route74.support_actions import (
@@ -58,8 +59,11 @@ from route74.support_triage import (
     build_support_triage,
     operator_primary_triage_item,
 )
-from route74.watch_state import DEFAULT_WATCH_STATE_PATH, WatchStateSummary, summarize_watch_state
-
+from route74.watch_state import (
+    DEFAULT_WATCH_STATE_PATH,
+    WatchStateSummary,
+    summarize_watch_state,
+)
 
 SUMMARY_ERRORS = (OSError, sqlite3.Error, ValueError)
 
@@ -175,7 +179,9 @@ class StatsSnapshot:
         if self.forecast_health is not None and forecast_health_error:
             raise ValueError("stats snapshot forecast_health_error must be empty when forecast health is available")
         if self.forecast_readiness is not None and forecast_readiness_error:
-            raise ValueError("stats snapshot forecast_readiness_error must be empty when forecast readiness is available")
+            raise ValueError(
+                "stats snapshot forecast_readiness_error must be empty when forecast readiness is available"
+            )
         if self.forecast_backtest is not None and forecast_backtest_error:
             raise ValueError("stats snapshot forecast_backtest_error must be empty when forecast backtest is available")
         if self.bot_latency is not None and bot_latency_error:

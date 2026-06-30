@@ -21,7 +21,12 @@ def register_database_commands(subparsers: argparse._SubParsersAction) -> None:
 
     backup = subparsers.add_parser("db-backup", help="Create a verified SQLite database backup.")
     backup.add_argument("--output", type=Path, default=None, help="Backup output path.")
-    backup.add_argument("--keep", type=positive_int, default=14, help="Number of route74-*.sqlite backups to keep.")
+    backup.add_argument(
+        "--keep",
+        type=positive_int,
+        default=14,
+        help="Number of route74-*.sqlite backups to keep.",
+    )
     backup.set_defaults(func=cmd_db_backup)
 
     migrations = subparsers.add_parser("db-migrations", help="List applied SQLite schema migrations.")

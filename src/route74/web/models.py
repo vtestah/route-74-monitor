@@ -6,7 +6,6 @@ from pydantic import BaseModel, ConfigDict, field_validator
 
 from route74.domain.walk_buffer import is_valid_walk_minutes
 
-
 ProfileSelector = Literal["auto", "morning", "evening"]
 
 

@@ -5,7 +5,10 @@ from collections.abc import Callable
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from route74.sources.yandex.browser_rate_limit import _LOCK_PATH_ENV, run_with_browser_slot
+from route74.sources.yandex.browser_rate_limit import (
+    _LOCK_PATH_ENV,
+    run_with_browser_slot,
+)
 from route74.sources.yandex.smoke.assertions import assert_equal
 
 
@@ -23,8 +26,14 @@ def run_browser_rate_limit_smoke() -> None:
             _assert_value_error(lambda: run_with_browser_slot(lambda: "bad", 0), "browser lock path")
 
     _assert_value_error(lambda: run_with_browser_slot(lambda: "bad", -1), "browser min interval")
-    _assert_value_error(lambda: run_with_browser_slot(lambda: "bad", float("nan")), "browser min interval")
-    _assert_value_error(lambda: run_with_browser_slot(lambda: "bad", float("inf")), "browser min interval")
+    _assert_value_error(
+        lambda: run_with_browser_slot(lambda: "bad", float("nan")),
+        "browser min interval",
+    )
+    _assert_value_error(
+        lambda: run_with_browser_slot(lambda: "bad", float("inf")),
+        "browser min interval",
+    )
     _assert_value_error(lambda: run_with_browser_slot(lambda: "bad", True), "browser min interval")
 
 

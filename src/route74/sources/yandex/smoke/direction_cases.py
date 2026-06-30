@@ -137,7 +137,10 @@ def _run_prediction_direction_smoke(current_time: datetime) -> None:
     assert_equal(wrong_thread.arrival_minutes, ())
     assert_equal(wrong_thread.confidence.value, "low")
     assert_equal(wrong_thread.raw_status, "vehicle_prediction_thread_fallback")
-    assert_equal("vehicle_prediction_thread_fallback:not_found" in wrong_thread.fallback_reason, True)
+    assert_equal(
+        "vehicle_prediction_thread_fallback:not_found" in wrong_thread.fallback_reason,
+        True,
+    )
 
     wrong_thread_coordinates = parse_vehicle_prediction_payload(
         {"predictions": [_prediction_with_coordinates("wrong-thread-coordinates", "2161326768", "20:20")]},
@@ -151,7 +154,10 @@ def _run_prediction_direction_smoke(current_time: datetime) -> None:
     assert_equal(wrong_thread_coordinates.vehicles[0].arrival_minutes, None)
     assert_equal(wrong_thread_coordinates.vehicles[0].age_seconds, 0)
     assert_equal(wrong_thread_coordinates.raw_status, "vehicle_prediction_thread_fallback")
-    assert_equal("vehicle_prediction_thread_fallback:not_found" in wrong_thread_coordinates.fallback_reason, True)
+    assert_equal(
+        "vehicle_prediction_thread_fallback:not_found" in wrong_thread_coordinates.fallback_reason,
+        True,
+    )
 
     missing_thread = parse_vehicle_prediction_payload(
         {"predictions": [_prediction_without_thread("missing-thread", "20:24")]},
@@ -163,7 +169,10 @@ def _run_prediction_direction_smoke(current_time: datetime) -> None:
     assert_equal(missing_thread.arrival_minutes, ())
     assert_equal(missing_thread.confidence.value, "low")
     assert_equal(missing_thread.raw_status, "vehicle_prediction_thread_fallback")
-    assert_equal("vehicle_prediction_thread_fallback:missing" in missing_thread.fallback_reason, True)
+    assert_equal(
+        "vehicle_prediction_thread_fallback:missing" in missing_thread.fallback_reason,
+        True,
+    )
 
 
 def _vehicle_with_thread(vehicle_id: str, thread_id: str, arrival_minutes: int) -> dict[str, object]:

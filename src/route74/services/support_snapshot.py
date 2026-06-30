@@ -35,8 +35,11 @@ from route74.support_triage import (
     build_support_triage,
     operator_triage_item_for_items,
 )
-from route74.watch_state import DEFAULT_WATCH_STATE_PATH, WatchStateSummary, summarize_watch_state
-
+from route74.watch_state import (
+    DEFAULT_WATCH_STATE_PATH,
+    WatchStateSummary,
+    summarize_watch_state,
+)
 
 SUPPORT_SNAPSHOT_ERRORS = STORAGE_READ_ERRORS
 SUPPORT_SNAPSHOT_HOURS = 24
@@ -50,11 +53,28 @@ class SupportSnapshotItem:
     action: str
 
     def __post_init__(self) -> None:
-        if self.severity not in {TRIAGE_OK, TRIAGE_WARNING, TRIAGE_CRITICAL, TRIAGE_INFO}:
+        if self.severity not in {
+            TRIAGE_OK,
+            TRIAGE_WARNING,
+            TRIAGE_CRITICAL,
+            TRIAGE_INFO,
+        }:
             raise ValueError("support snapshot item severity is unknown")
-        object.__setattr__(self, "key", sanitize_diagnostic_text(self.key, fallback="unknown", limit=80))
-        object.__setattr__(self, "message", sanitize_diagnostic_text(self.message, fallback="-", limit=220))
-        object.__setattr__(self, "action", sanitize_command_text(self.action, fallback=DEFAULT_TRIAGE_ACTION, limit=160))
+        object.__setattr__(
+            self,
+            "key",
+            sanitize_diagnostic_text(self.key, fallback="unknown", limit=80),
+        )
+        object.__setattr__(
+            self,
+            "message",
+            sanitize_diagnostic_text(self.message, fallback="-", limit=220),
+        )
+        object.__setattr__(
+            self,
+            "action",
+            sanitize_command_text(self.action, fallback=DEFAULT_TRIAGE_ACTION, limit=160),
+        )
 
 
 @dataclass(frozen=True)
@@ -82,8 +102,16 @@ class SupportSnapshot:
             raise ValueError("support snapshot latest_reply_change needs DepartureChange or None")
         if not isinstance(self.items, tuple) or any(not isinstance(item, SupportSnapshotItem) for item in self.items):
             raise ValueError("support snapshot items need tuple of SupportSnapshotItem")
-        object.__setattr__(self, "profile_key", sanitize_diagnostic_text(self.profile_key, fallback="unknown", limit=40))
-        object.__setattr__(self, "window_key", sanitize_diagnostic_text(self.window_key, fallback="unknown", limit=80))
+        object.__setattr__(
+            self,
+            "profile_key",
+            sanitize_diagnostic_text(self.profile_key, fallback="unknown", limit=40),
+        )
+        object.__setattr__(
+            self,
+            "window_key",
+            sanitize_diagnostic_text(self.window_key, fallback="unknown", limit=80),
+        )
         object.__setattr__(
             self,
             "primary_action",
@@ -174,13 +202,22 @@ class SupportSnapshotService:
         )
 
 
-def _watch_state_for_snapshot(path: Path, current_time: datetime) -> tuple[WatchStateSummary | None, tuple[SupportTriageItem, ...]]:
+def _watch_state_for_snapshot(
+    path: Path, current_time: datetime
+) -> tuple[WatchStateSummary | None, tuple[SupportTriageItem, ...]]:
     try:
         return summarize_watch_state(path, current_time), ()
     except SUPPORT_SNAPSHOT_ERRORS as exc:
         error_type = sanitize_diagnostic_text(type(exc).__name__, fallback="Exception", limit=80)
         message = f"file=unreadable type={error_type}"
-        return None, (SupportTriageItem(TRIAGE_CRITICAL, "watch_state_file", message, watch_state_command_for_path(path)),)
+        return None, (
+            SupportTriageItem(
+                TRIAGE_CRITICAL,
+                "watch_state_file",
+                message,
+                watch_state_command_for_path(path),
+            ),
+        )
 
 
 def _support_snapshot_error_item(error: Exception) -> SupportTriageItem:

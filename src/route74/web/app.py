@@ -9,22 +9,27 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse, HTMLResponse
 
 from route74.build_info import load_build_info
-from route74.services.factory import commute_service
-from route74.diagnostics import sanitize_diagnostic_text
-from route74.domain.profiles import EVENING, MORNING, profile_by_key
 from route74.dashboard.assets import DASHBOARD_HTML, FAVICON_SVG
-from route74.dashboard.data import build_dashboard_summary, build_dashboard_support_snapshot, load_recent_samples, load_window_series
+from route74.dashboard.data import (
+    build_dashboard_summary,
+    build_dashboard_support_snapshot,
+    load_recent_samples,
+    load_window_series,
+)
 from route74.dashboard.preview import (
     dashboard_preview_cache_dir,
     load_dashboard_preview,
     load_dashboard_preview_image,
     refresh_dashboard_preview,
 )
+from route74.diagnostics import sanitize_diagnostic_text
+from route74.domain.profiles import EVENING, MORNING, profile_by_key
 from route74.notifications import build_notifier, load_pushover_config
 from route74.presenters.commute import format_action_message
 from route74.presenters.stats import format_stats_message
 from route74.presenters.support_snapshot import format_support_snapshot
 from route74.services.departure import choose_profile_for_time
+from route74.services.factory import commute_service
 from route74.services.stats import StatsService
 from route74.services.support_snapshot import SupportSnapshotService
 from route74.storage import DEFAULT_DB, summarize_db_health_readonly
@@ -36,7 +41,6 @@ from route74.web.decision_ui import decision_ui_payload
 from route74.web.models import CatchRequest, WatchStopRequest
 from route74.web.runtime_metrics import elapsed_ms, now_perf, web_interaction_event
 from route74.web.watch_runtime import WatchLoop, WebWatchManager, WebWatchStore
-
 
 HTTP_ERROR_DETAIL_LIMIT = 160
 
@@ -50,7 +54,11 @@ def create_app(
     app = FastAPI(
         title="Route 74",
         version="0.1.0",
-        lifespan=_lifespan(Path(db_path), Path(watch_state_path), Path(env_file) if env_file is not None else None),
+        lifespan=_lifespan(
+            Path(db_path),
+            Path(watch_state_path),
+            Path(env_file) if env_file is not None else None,
+        ),
     )
     app.state.preview_cache_path = dashboard_preview_cache_dir(Path(db_path))
 
@@ -132,7 +140,9 @@ def create_app(
             return load_window_series(app.state.db_path, window_key, days=days)
 
     @app.get("/api/recent-samples")
-    def api_recent_samples(window: str | None = None, limit: int = Query(default=50, ge=1, le=200)) -> dict[str, object]:
+    def api_recent_samples(
+        window: str | None = None, limit: int = Query(default=50, ge=1, le=200)
+    ) -> dict[str, object]:
         with _service_errors(not_found_detail=f"Неизвестное отчётное окно: {window}"):
             return load_recent_samples(app.state.db_path, window_key=window, limit=limit)
 

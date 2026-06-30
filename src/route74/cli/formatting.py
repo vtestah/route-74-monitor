@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 from route74.services.yandex_telemetry import YandexTelemetryResult
 from route74.sources.yandex.line import YandexLineTopology
@@ -15,7 +15,9 @@ def format_line_topology(topology: YandexLineTopology) -> str:
     ]
     for thread in topology.threads:
         active = " active" if thread.thread_id == topology.active_thread_id else ""
-        stops = ", ".join(f"{_diagnostic_text(stop.name)}({_diagnostic_text(stop.stop_id)})" for stop in thread.stops[:4])
+        stops = ", ".join(
+            f"{_diagnostic_text(stop.name)}({_diagnostic_text(stop.stop_id)})" for stop in thread.stops[:4]
+        )
         suffix = " ..." if len(thread.stops) > 4 else ""
         lines.append(
             f"- thread={_diagnostic_text(thread.thread_id)}{active} "
@@ -109,8 +111,10 @@ def format_report_window_summary(summary: ReportWindowSummary, db_path: Path) ->
 def counts_text(items: Iterable[CountByKey]) -> str:
     return ", ".join(f"{_diagnostic_text(item.key)}:{item.count}" for item in items) or "-"
 
+
 def _optional_field(label: str, value: object) -> str:
     return f" {label}={text}" if (text := _diagnostic_text(value, fallback="")) else ""
+
 
 def _diagnostic_text(value: object, *, fallback: str = "-", limit: int = 120) -> str:
     if value is None:

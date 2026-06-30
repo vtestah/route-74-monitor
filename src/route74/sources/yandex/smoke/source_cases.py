@@ -6,7 +6,11 @@ from route74.domain.commute import CommuteProfile
 from route74.domain.eta import EtaConfidence
 from route74.domain.profiles import EVENING, MORNING
 from route74.sources.yandex.config import YandexSourceConfig
-from route74.sources.yandex.models import YandexLiveForecast, YandexSourceMethod, YandexSourceStatus
+from route74.sources.yandex.models import (
+    YandexLiveForecast,
+    YandexSourceMethod,
+    YandexSourceStatus,
+)
 from route74.sources.yandex.smoke.assertions import assert_equal
 from route74.sources.yandex.transport import YandexTransportSource
 

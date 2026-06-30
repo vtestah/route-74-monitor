@@ -3,9 +3,10 @@ from __future__ import annotations
 from datetime import datetime
 
 from route74.models import NOVOSIBIRSK_TZ
-from route74.sources.yandex.smoke.browser_rate_limit_cases import run_browser_rate_limit_smoke
+from route74.sources.yandex.smoke.browser_rate_limit_cases import (
+    run_browser_rate_limit_smoke,
+)
 from route74.sources.yandex.smoke.capture_cases import run_browser_capture_smoke
-from route74.sources.yandex.smoke.diagnostics import run_dump_smoke, run_live_probe
 from route74.sources.yandex.smoke.coordinate_fallback_cases import (
     run_live_eta_evidence_guard_smoke,
     run_raw_vehicle_invalid_coordinate_smoke,
@@ -13,9 +14,13 @@ from route74.sources.yandex.smoke.coordinate_fallback_cases import (
     run_vehicle_prediction_invalid_coordinate_smoke,
     run_vehicle_prediction_source_coordinate_fallback_smoke,
 )
+from route74.sources.yandex.smoke.diagnostics import run_dump_smoke, run_live_probe
 from route74.sources.yandex.smoke.direction_cases import run_direction_smoke
 from route74.sources.yandex.smoke.line_cases import run_line_smoke
-from route74.sources.yandex.smoke.parser_cases import run_vehicle_parser_smoke, run_vehicle_prediction_smoke
+from route74.sources.yandex.smoke.parser_cases import (
+    run_vehicle_parser_smoke,
+    run_vehicle_prediction_smoke,
+)
 from route74.sources.yandex.smoke.route_traffic_cases import run_route_traffic_smoke
 from route74.sources.yandex.smoke.source_cases import (
     run_browser_cooldown_smoke,
@@ -27,7 +32,10 @@ from route74.sources.yandex.smoke.source_fallback_cases import (
     run_stop_info_fallback_wins_http_schedule_smoke,
     run_vehicle_prediction_no_target_fallback_smoke,
 )
-from route74.sources.yandex.smoke.stop_info_cases import run_stop_info_midnight_text_smoke, run_stop_info_smoke
+from route74.sources.yandex.smoke.stop_info_cases import (
+    run_stop_info_midnight_text_smoke,
+    run_stop_info_smoke,
+)
 from route74.sources.yandex.smoke.time_guard_cases import run_yandex_time_guard_smoke
 
 

@@ -11,8 +11,10 @@ from route74.diagnostics import sanitize_diagnostic_text
 from route74.domain.commute import CommuteProfile
 from route74.domain.profiles import profile_by_key
 from route74.domain.walk_buffer import is_valid_walk_minutes
-from route74.domain.watch_policy import WATCH_DURATION_MINUTES, WATCH_POLL_INTERVAL_SECONDS
-
+from route74.domain.watch_policy import (
+    WATCH_DURATION_MINUTES,
+    WATCH_POLL_INTERVAL_SECONDS,
+)
 
 DEFAULT_WATCH_STATE_PATH = Path("data/web_watches.json")
 WATCH_STATE_TTL = timedelta(minutes=WATCH_DURATION_MINUTES)
@@ -146,9 +148,7 @@ def summarize_watch_state(path: Path, current_time: datetime) -> WatchStateSumma
     result = load_watch_states(path, current_time)
     states = result.states
     due_states = tuple(state for state in states if state.next_poll_at <= current_time)
-    overdue_states = tuple(
-        state for state in states if current_time - state.next_poll_at >= WATCH_STATE_OVERDUE_AFTER
-    )
+    overdue_states = tuple(state for state in states if current_time - state.next_poll_at >= WATCH_STATE_OVERDUE_AFTER)
     runtime_errors = _runtime_error_summary(states)
     next_poll_at = min((state.next_poll_at for state in states), default=None)
     oldest_started_at = min((state.started_at for state in states), default=None)
@@ -215,16 +215,12 @@ def format_watch_state_summary(summary: WatchStateSummary, path_label: str | Non
     if summary.error_type:
         lines.append(f"- {summary.status} watch_state_file: unreadable type={summary.error_type}")
     if summary.overdue_count:
-        lines.append(
-            f"- warning watch_state_overdue: {summary.overdue_count} active watch polls are overdue"
-        )
+        lines.append(f"- warning watch_state_overdue: {summary.overdue_count} active watch polls are overdue")
     if summary.runtime_error_count:
         lines.append(
-            (
-                f"- warning watch_state_runtime_error: errors={summary.runtime_error_count} "
-                f"watches={summary.runtime_error_records} latest={_format_datetime(summary.latest_error_at)} "
-                f"types={_error_types_text(summary.runtime_error_types)}"
-            )
+            f"- warning watch_state_runtime_error: errors={summary.runtime_error_count} "
+            f"watches={summary.runtime_error_records} latest={_format_datetime(summary.latest_error_at)} "
+            f"types={_error_types_text(summary.runtime_error_types)}"
         )
     if summary.expired_records:
         lines.append(f"- info watch_state_expired: {summary.expired_records} stale records ignored")
@@ -243,14 +239,12 @@ def format_watch_state_summary(summary: WatchStateSummary, path_label: str | Non
                 f" types={_error_types_text(profile.runtime_error_types)}"
             )
         lines.append(
-            (
-                f"- profile={profile.profile_key} active={profile.active_count} due={profile.due_count} "
-                f"early_sent={profile.early_sent_count} "
-                f"oldest_age={_minutes(profile.oldest_age_minutes)} "
-                f"next_poll={_format_datetime(profile.next_poll_at)} "
-                f"expires_in={_minutes(profile.expires_in_minutes)} "
-                f"expires_at={_format_datetime(profile.expires_at)}{runtime_error_text}"
-            )
+            f"- profile={profile.profile_key} active={profile.active_count} due={profile.due_count} "
+            f"early_sent={profile.early_sent_count} "
+            f"oldest_age={_minutes(profile.oldest_age_minutes)} "
+            f"next_poll={_format_datetime(profile.next_poll_at)} "
+            f"expires_in={_minutes(profile.expires_in_minutes)} "
+            f"expires_at={_format_datetime(profile.expires_at)}{runtime_error_text}"
         )
     return "\n".join(lines)
 
@@ -454,17 +448,18 @@ def _error_types_text(values: tuple[str, ...]) -> str:
 
 
 def _watch_key(value: object) -> str:
-    if not isinstance(value, str) or not value or value != value.strip() or any(character.isspace() for character in value):
+    if (
+        not isinstance(value, str)
+        or not value
+        or value != value.strip()
+        or any(character.isspace() for character in value)
+    ):
         raise ValueError("watch key must be plain non-empty text")
     return value
 
 
 def _walk_minutes(value: object) -> int:
-    if (
-        isinstance(value, bool)
-        or not isinstance(value, int)
-        or not is_valid_walk_minutes(value)
-    ):
+    if isinstance(value, bool) or not isinstance(value, int) or not is_valid_walk_minutes(value):
         raise ValueError("watch walk minutes is out of range")
     return value
 

@@ -4,11 +4,11 @@ import argparse
 from pathlib import Path
 
 from route74.cli.common import profile_from_name, walk_minutes_arg
-from route74.services.factory import commute_service
 from route74.domain.profiles import EVENING, MORNING, PROFILE_KEYS
 from route74.presenters.calculation import format_calculation_explanation
 from route74.presenters.commute import format_action_message
 from route74.presenters.stats import format_stats_message
+from route74.services.factory import commute_service
 from route74.services.stats import StatsService
 from route74.watch_state import DEFAULT_WATCH_STATE_PATH
 
@@ -21,12 +21,22 @@ def register_commute_commands(subparsers: argparse._SubParsersAction) -> None:
 
     commute = subparsers.add_parser("commute", help="Preview the web commute response.")
     commute.add_argument("profile", choices=PROFILE_KEYS, help="Commute profile.")
-    commute.add_argument("--walk", type=walk_minutes_arg, default=None, help="Walking minutes to the stop.")
+    commute.add_argument(
+        "--walk",
+        type=walk_minutes_arg,
+        default=None,
+        help="Walking minutes to the stop.",
+    )
     commute.set_defaults(func=cmd_commute)
 
     stats = subparsers.add_parser("stats", help="Print route 74 Yandex diagnostics.")
     stats.add_argument("profile", choices=PROFILE_KEYS, help="Commute profile.")
-    stats.add_argument("--walk", type=walk_minutes_arg, default=None, help="Walking minutes to the stop.")
+    stats.add_argument(
+        "--walk",
+        type=walk_minutes_arg,
+        default=None,
+        help="Walking minutes to the stop.",
+    )
     stats.add_argument(
         "--watch-state-path",
         type=Path,
@@ -37,7 +47,12 @@ def register_commute_commands(subparsers: argparse._SubParsersAction) -> None:
 
     predict = subparsers.add_parser("predict", help="Preview Yandex live/history departure decision.")
     predict.add_argument("profile", choices=PROFILE_KEYS, help="Commute profile.")
-    predict.add_argument("--walk", type=walk_minutes_arg, default=None, help="Walking minutes to the stop.")
+    predict.add_argument(
+        "--walk",
+        type=walk_minutes_arg,
+        default=None,
+        help="Walking minutes to the stop.",
+    )
     predict.set_defaults(func=cmd_predict)
 
 

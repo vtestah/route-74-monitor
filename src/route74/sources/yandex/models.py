@@ -6,7 +6,6 @@ from math import isfinite
 
 from route74.domain.eta import EtaConfidence
 
-
 MAX_YANDEX_RAW_REASON_LENGTH = 200
 MAX_YANDEX_DIAGNOSTIC_LENGTH = 200
 
@@ -95,19 +94,14 @@ class YandexLiveForecast:
             raise ValueError("Yandex forecast confidence needs EtaConfidence")
         _ensure_text("fallback reason", self.fallback_reason)
         _ensure_text("raw status", self.raw_status)
-        if not isinstance(self.diagnostics, tuple) or any(
-            not isinstance(item, str) for item in self.diagnostics
-        ):
+        if not isinstance(self.diagnostics, tuple) or any(not isinstance(item, str) for item in self.diagnostics):
             raise ValueError("Yandex forecast diagnostics need tuple of text")
         object.__setattr__(
             self,
             "diagnostics",
             tuple(
                 item
-                for item in (
-                    _compact_text(value, MAX_YANDEX_DIAGNOSTIC_LENGTH)
-                    for value in self.diagnostics
-                )
+                for item in (_compact_text(value, MAX_YANDEX_DIAGNOSTIC_LENGTH) for value in self.diagnostics)
                 if item
             ),
         )
@@ -115,7 +109,7 @@ class YandexLiveForecast:
             raise ValueError("disabled Yandex forecast cannot be available")
 
     @classmethod
-    def disabled(cls) -> "YandexLiveForecast":
+    def disabled(cls) -> YandexLiveForecast:
         return cls(
             enabled=False,
             available=False,
@@ -131,7 +125,7 @@ class YandexLiveForecast:
         source_method: YandexSourceMethod = YandexSourceMethod.NONE,
         reason: str = "",
         diagnostics: tuple[str, ...] = (),
-    ) -> "YandexLiveForecast":
+    ) -> YandexLiveForecast:
         return cls(
             enabled=True,
             available=False,
@@ -141,7 +135,7 @@ class YandexLiveForecast:
             diagnostics=diagnostics,
         )
 
-    def with_method(self, method: YandexSourceMethod) -> "YandexLiveForecast":
+    def with_method(self, method: YandexSourceMethod) -> YandexLiveForecast:
         return replace(self, source_method=method)
 
 

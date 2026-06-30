@@ -5,17 +5,21 @@ from datetime import timedelta
 from math import ceil
 
 from route74.domain.prediction_buckets import prediction_bucket_tolerance
-from route74.storage.forecast_backtest_cases import ForecastBacktestCase, normalized_forecast_cases
+from route74.storage.forecast_backtest_cases import (
+    ForecastBacktestCase,
+    normalized_forecast_cases,
+)
 from route74.storage.forecast_backtest_results import (
-    DEFAULT_FORECAST_BACKTEST_PERCENTILES,
-    FORECAST_BACKTEST_PERCENTILES_ERROR,
     ForecastBacktestResult,
     ForecastBacktestSummary,
-    best_forecast_backtest_result,
-    selected_forecast_backtest_result,
     validate_forecast_backtest_percentiles,
 )
-from route74.storage.helpers import TRUSTED_ETA_SOURCE_METHODS, WEEKDAYS, optional_int_value, within_time_bucket
+from route74.storage.helpers import (
+    TRUSTED_ETA_SOURCE_METHODS,
+    WEEKDAYS,
+    optional_int_value,
+    within_time_bucket,
+)
 
 FORECAST_BACKTEST_SLOT_MINUTES = 5
 
@@ -43,7 +47,14 @@ def summarize_yandex_forecast_backtest(
     percentiles = validate_forecast_backtest_percentiles(percentiles)
     cases = _load_cases(connection, profile_key, report_window_key, max_age_seconds)
     results = tuple(
-        _evaluate_percentile(cases, percentile, history_days, bucket_minutes, min_samples, min_distinct_days)
+        _evaluate_percentile(
+            cases,
+            percentile,
+            history_days,
+            bucket_minutes,
+            min_samples,
+            min_distinct_days,
+        )
         for percentile in percentiles
     )
     return ForecastBacktestSummary(

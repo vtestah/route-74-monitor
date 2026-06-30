@@ -7,8 +7,8 @@ from route74.cli.common import sqlite_db_path
 from route74.cli.commute import register_commute_commands
 from route74.cli.database import register_database_commands
 from route74.cli.stats import register_stats_commands
-from route74.cli.watch_state import register_watch_state_command
 from route74.cli.version import register_version_command
+from route74.cli.watch_state import register_watch_state_command
 from route74.cli.yandex import register_yandex_commands
 from route74.storage import DEFAULT_DB
 

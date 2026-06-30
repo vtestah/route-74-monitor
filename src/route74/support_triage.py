@@ -7,8 +7,16 @@ from route74.diagnostics import sanitize_command_text, sanitize_diagnostic_text
 from route74.domain.runtime_sources import BOT_EVENT_USER_REPLY
 from route74.storage.forecast_health import ForecastHealthSummary, ForecastWindowHealth
 from route74.storage.models import CountByKey
-from route74.storage.monitoring import MONITOR_CRITICAL, MONITOR_WARNING, MonitorIssue, MonitorSummary
-from route74.storage.runtime_quality import BotRuntimeCalibration, BotRuntimePredictionQuality
+from route74.storage.monitoring import (
+    MONITOR_CRITICAL,
+    MONITOR_WARNING,
+    MonitorIssue,
+    MonitorSummary,
+)
+from route74.storage.runtime_quality import (
+    BotRuntimeCalibration,
+    BotRuntimePredictionQuality,
+)
 from route74.support_actions import (
     bot_latency_command,
     bot_runtime_command,
@@ -21,7 +29,6 @@ from route74.support_actions import (
     watch_state_command_for_path,
 )
 from route74.watch_state import WatchStateSummary
-
 
 TRIAGE_OK = "ok"
 TRIAGE_WARNING = "warning"
@@ -96,9 +103,21 @@ class SupportTriageItem:
     def __post_init__(self) -> None:
         if self.severity not in TRIAGE_SEVERITIES:
             raise ValueError("support triage severity is unknown")
-        object.__setattr__(self, "key", sanitize_diagnostic_text(self.key, fallback="unknown", limit=80))
-        object.__setattr__(self, "message", sanitize_diagnostic_text(self.message, fallback="-", limit=220))
-        object.__setattr__(self, "action", sanitize_command_text(self.action, fallback=DEFAULT_TRIAGE_ACTION, limit=160))
+        object.__setattr__(
+            self,
+            "key",
+            sanitize_diagnostic_text(self.key, fallback="unknown", limit=80),
+        )
+        object.__setattr__(
+            self,
+            "message",
+            sanitize_diagnostic_text(self.message, fallback="-", limit=220),
+        )
+        object.__setattr__(
+            self,
+            "action",
+            sanitize_command_text(self.action, fallback=DEFAULT_TRIAGE_ACTION, limit=160),
+        )
 
 
 @dataclass(frozen=True)
@@ -167,7 +186,9 @@ def _issue_matches_profile(issue: MonitorIssue, profile_key: str) -> bool:
     return not issue.profile_key or issue.profile_key == profile_key
 
 
-def _watch_state_items(summary: WatchStateSummary | None) -> tuple[SupportTriageItem, ...]:
+def _watch_state_items(
+    summary: WatchStateSummary | None,
+) -> tuple[SupportTriageItem, ...]:
     if summary is None:
         return ()
     action = watch_state_command_for_path(summary.path)
@@ -425,14 +446,18 @@ def primary_triage_item(triage: SupportTriage) -> SupportTriageItem | None:
     return primary_triage_item_for_items(triage.items)
 
 
-def primary_triage_item_for_items(items: tuple[SupportTriageItem, ...]) -> SupportTriageItem | None:
+def primary_triage_item_for_items(
+    items: tuple[SupportTriageItem, ...],
+) -> SupportTriageItem | None:
     actionable = tuple(item for item in items if item.severity in {TRIAGE_WARNING, TRIAGE_CRITICAL})
     if not actionable:
         return None
     return max(actionable, key=_item_priority)
 
 
-def incident_triage_item_for_items(items: tuple[SupportTriageItem, ...]) -> SupportTriageItem | None:
+def incident_triage_item_for_items(
+    items: tuple[SupportTriageItem, ...],
+) -> SupportTriageItem | None:
     primary = primary_triage_item_for_items(items)
     if primary is not None and primary.key in {
         "db_integrity",
@@ -445,7 +470,8 @@ def incident_triage_item_for_items(items: tuple[SupportTriageItem, ...]) -> Supp
     bot_latency_items = tuple(
         item
         for item in items
-        if item.key in {
+        if item.key
+        in {
             "bot_latency_errors",
             "bot_no_eta_replies",
             "bot_latency_p95",
@@ -470,7 +496,9 @@ def incident_primary_action(triage: SupportTriage) -> str:
     return item.action
 
 
-def operator_triage_item_for_items(items: tuple[SupportTriageItem, ...]) -> SupportTriageItem | None:
+def operator_triage_item_for_items(
+    items: tuple[SupportTriageItem, ...],
+) -> SupportTriageItem | None:
     watch_item = _actionable_item_by_keys(items, OPERATOR_WATCH_KEYS)
     if watch_item is not None:
         return watch_item
@@ -558,7 +586,12 @@ def _monitor_action(issue: MonitorIssue, hours: int, *, profile_key: str) -> str
 
 def _bot_runtime_action(profile_key: str, *, hours: int) -> str:
     try:
-        return bot_runtime_command(hours=hours, limit=8, profile_key=profile_key, event_kind=BOT_EVENT_USER_REPLY)
+        return bot_runtime_command(
+            hours=hours,
+            limit=8,
+            profile_key=profile_key,
+            event_kind=BOT_EVENT_USER_REPLY,
+        )
     except ValueError:
         return bot_runtime_command(hours=hours, limit=8, event_kind=BOT_EVENT_USER_REPLY)
 

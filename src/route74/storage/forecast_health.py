@@ -4,25 +4,30 @@ import json
 import sqlite3
 from collections import Counter
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from route74.domain.reporting import REPORT_WINDOWS, report_profiles_for_time
 from route74.domain.runtime_sources import RUNTIME_SOURCE_WEB_APP
 from route74.models import now_local
-from route74.storage.collector_runs import collector_profile_filter_includes, summarize_collector_runs_for_report_window
+from route74.storage.collector_runs import (
+    collector_profile_filter_includes,
+    summarize_collector_runs_for_report_window,
+)
 from route74.storage.forecast_coverage import summarize_yandex_forecast_window_coverage
 from route74.storage.forecast_validation import validate_forecast_window_coverage_inputs
-from route74.storage.history import FORECAST_HISTORY_SLOT_MINUTES
 from route74.storage.heartbeat import load_collector_heartbeat
 from route74.storage.helpers import WEEKDAYS, count_rows, optional_int_value
+from route74.storage.history import FORECAST_HISTORY_SLOT_MINUTES
 from route74.storage.models import (
     CollectorWindowRunSummary,
     CountByKey,
     ForecastWindowCoverageSummary,
     percent,
 )
-from route74.storage.yandex_canary import YandexCanaryHealth, summarize_yandex_canary_health
-
+from route74.storage.yandex_canary import (
+    YandexCanaryHealth,
+    summarize_yandex_canary_health,
+)
 
 HEALTHY_COLLECTOR_STATUSES = {"ok", "skipped"}
 API_RISK_ALERT_PERCENT = 10
@@ -352,20 +357,32 @@ def _status_reason(
             f"forecast/report-window tables disagree: forecast_only={forecast_gap}, report_only={report_gap}",
         )
     if coverage.total_samples == 0 and collector_runs.total_runs == 0:
-        return "no_collector_runs", "collector has no recorded runs in this report window"
+        return (
+            "no_collector_runs",
+            "collector has no recorded runs in this report window",
+        )
     if coverage.total_samples == 0:
         return (
             "no_samples",
             f"collector ran {collector_runs.total_runs} times, but no report-window forecast samples were stored",
         )
     if api_risk_samples > 0 and percent(api_risk_samples, coverage.total_samples) >= API_RISK_ALERT_PERCENT:
-        return "api_contract_risk", f"Yandex API/route contract risk: {_count_reason(api_risk_reasons)}"
+        return (
+            "api_contract_risk",
+            f"Yandex API/route contract risk: {_count_reason(api_risk_reasons)}",
+        )
     if coverage.eta_samples == 0:
         return "no_eta", "samples exist, but Yandex did not provide ETA"
     if coverage.fresh_eta_samples == 0:
-        return "stale_eta", "ETA samples exist, but vehicle freshness cutoff rejects them"
+        return (
+            "stale_eta",
+            "ETA samples exist, but vehicle freshness cutoff rejects them",
+        )
     if coverage.ready_buckets < coverage.total_buckets:
-        return "insufficient_bucket_coverage", f"missing ready buckets: {_bucket_gap_reason(bucket_gaps)}"
+        return (
+            "insufficient_bucket_coverage",
+            f"missing ready buckets: {_bucket_gap_reason(bucket_gaps)}",
+        )
     return "ready", "all report-window buckets have enough fresh ETA samples"
 
 
@@ -532,7 +549,10 @@ def _truth_status_reason(counts: PredictionLabHealthCounts, *, current_date: dat
     if counts.arrivals < TRUTH_MIN_ARRIVALS:
         return "insufficient", f"arrival facts {counts.arrivals}/{TRUTH_MIN_ARRIVALS}"
     if counts.evaluations < TRUTH_MIN_EVALUATIONS:
-        return "warming_up", f"evaluated predictions {counts.evaluations}/{TRUTH_MIN_EVALUATIONS}"
+        return (
+            "warming_up",
+            f"evaluated predictions {counts.evaluations}/{TRUTH_MIN_EVALUATIONS}",
+        )
     if counts.latest_arrival_at is None:
         return "insufficient", "latest arrival is missing"
     age_days = _age_seconds(current_date, counts.latest_arrival_at) // 86_400
@@ -573,10 +593,7 @@ def _api_risk_reason(
 def _has_degraded_route_signal(status: str, route_geometry_status: str, vehicle_count: int) -> bool:
     if route_geometry_status in ROUTE_GEOMETRY_RISK_STATUSES:
         return False
-    return (
-        route_geometry_status in ROUTE_GEOMETRY_OK_STATUSES
-        or (status == "coordinates_only" and vehicle_count > 0)
-    )
+    return route_geometry_status in ROUTE_GEOMETRY_OK_STATUSES or (status == "coordinates_only" and vehicle_count > 0)
 
 
 def _coordinate_fallback_reason(fallback_reason: str, route_geometry_status: str) -> str:
@@ -605,7 +622,9 @@ def _count_reason(counts: tuple[CountByKey, ...]) -> str:
     return ", ".join(f"{item.key}={item.count}" for item in counts) or "-"
 
 
-def _bucket_gaps(coverage: ForecastWindowCoverageSummary) -> tuple[ForecastBucketGap, ...]:
+def _bucket_gaps(
+    coverage: ForecastWindowCoverageSummary,
+) -> tuple[ForecastBucketGap, ...]:
     return tuple(
         ForecastBucketGap(
             label=bucket.label,
@@ -742,8 +761,8 @@ def _collector_health(
 
 
 def _age_seconds(current_date: datetime, updated_at: datetime) -> int:
-    current = current_date if current_date.tzinfo is not None else current_date.replace(tzinfo=timezone.utc)
-    updated = updated_at if updated_at.tzinfo is not None else updated_at.replace(tzinfo=timezone.utc)
+    current = current_date if current_date.tzinfo is not None else current_date.replace(tzinfo=UTC)
+    updated = updated_at if updated_at.tzinfo is not None else updated_at.replace(tzinfo=UTC)
     return max(0, round((current - updated).total_seconds()))
 
 

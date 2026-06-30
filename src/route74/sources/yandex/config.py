@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+
 from route74.sources.yandex import config_validation as validation
 from route74.sources.yandex.models import YandexSourceMode
 

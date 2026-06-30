@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 import json
 import sqlite3
 from dataclasses import asdict, dataclass
@@ -8,7 +9,10 @@ from math import ceil
 
 from route74.domain.eta import EtaConfidence
 from route74.domain.eta_policy import source_risk_buffer_floor_minutes
-from route74.domain.prediction_buckets import PREDICTION_ETA_BUCKETS, prediction_bucket_label
+from route74.domain.prediction_buckets import (
+    PREDICTION_ETA_BUCKETS,
+    prediction_bucket_label,
+)
 from route74.domain.prediction_consensus import (
     early_conflict_minutes_for_event_source,
     prediction_selection_candidate_for_event_source,
@@ -30,13 +34,31 @@ from route74.domain.prediction_sources import (
 from route74.domain.reporting import ReportWindow, matching_report_window
 from route74.domain.runtime_sources import RUNTIME_SOURCE_WEB_APP
 from route74.models import now_local
-from route74.sources.yandex.constants import ROUTE_TRAFFIC_POINTS_BY_PROFILE, STOP_ID_BY_PROFILE
-from route74.sources.yandex.freshness import DEFAULT_FRESH_VEHICLE_MAX_AGE_SECONDS, vehicle_is_fresh
+from route74.sources.yandex.constants import (
+    ROUTE_TRAFFIC_POINTS_BY_PROFILE,
+    STOP_ID_BY_PROFILE,
+)
+from route74.sources.yandex.freshness import (
+    DEFAULT_FRESH_VEHICLE_MAX_AGE_SECONDS,
+    vehicle_is_fresh,
+)
 from route74.sources.yandex.line import YandexLineTopology
-from route74.sources.yandex.live_evidence import LiveEtaEvidenceAdjustment, live_eta_evidence_adjustment
-from route74.sources.yandex.models import YandexLiveForecast, YandexSourceMethod, YandexSourceStatus, YandexVehicle
+from route74.sources.yandex.live_evidence import (
+    LiveEtaEvidenceAdjustment,
+    live_eta_evidence_adjustment,
+)
+from route74.sources.yandex.models import (
+    YandexLiveForecast,
+    YandexSourceMethod,
+    YandexSourceStatus,
+    YandexVehicle,
+)
 from route74.sources.yandex.trust import forecast_has_trusted_fresh_eta
-from route74.storage.helpers import arrival_minutes_from_json, count_table_rows, day_kind_weekdays
+from route74.storage.helpers import (
+    arrival_minutes_from_json,
+    count_table_rows,
+    day_kind_weekdays,
+)
 from route74.storage.history import load_yandex_eta_history_for_profile_window
 from route74.storage.models import RouteTrafficSnapshot
 from route74.storage.route_geometry import (
@@ -49,7 +71,6 @@ from route74.storage.route_geometry import (
     previous_vehicle_positions,
     route_projection_for_point,
 )
-
 
 TARGET_STOP_RADIUS_METERS = 120
 COORDINATE_ARRIVAL_MAX_ROUTE_SNAP_METERS = 120
@@ -460,7 +481,10 @@ def infer_arrival_events_for_snapshot(
                     arrived_at=sampled_at,
                     source="trusted_eta",
                     confidence=EtaConfidence.HIGH.value if minutes == 0 else EtaConfidence.MEDIUM.value,
-                    raw={"arrival_minutes": minutes, "source_method": forecast.source_method.value},
+                    raw={
+                        "arrival_minutes": minutes,
+                        "source_method": forecast.source_method.value,
+                    },
                 )
                 if event is not None:
                     arrivals.append(event)
@@ -503,7 +527,9 @@ def infer_arrival_events_for_snapshot(
                 "route_evidence": route_match.evidence,
                 "route_snap_distance_meters": round(route_match.snap_distance_meters),
                 "target_route_delta_meters": round(route_match.target_delta_meters),
-                "route_progress_meters": round(route_match.progress_meters) if route_match.progress_meters is not None else None,
+                "route_progress_meters": round(route_match.progress_meters)
+                if route_match.progress_meters is not None
+                else None,
             },
         )
         if event is not None:
@@ -658,7 +684,9 @@ def estimate_vehicle_progress_candidates(
         speeds: list[float] = []
         previous_samples: list[dict[str, object]] = []
         for previous in previous_positions:
-            previous_projection = route_projection_for_point(geometry.points, geometry.measures, previous.lat, previous.lng)
+            previous_projection = route_projection_for_point(
+                geometry.points, geometry.measures, previous.lat, previous.lng
+            )
             if previous_projection is None:
                 continue
             if previous_projection.distance_meters > VEHICLE_PROGRESS_MAX_ROUTE_SNAP_METERS:
@@ -856,7 +884,11 @@ def _smoothed_vehicle_progress_track(
 def _vehicle_progress_effective_speed(observed_speed_mps: float, track: _VehicleProgressTrack) -> float:
     if track.sample_count < VEHICLE_PROGRESS_TRACK_MIN_SAMPLES:
         return observed_speed_mps
-    return _clamp_float(track.velocity_mps, VEHICLE_PROGRESS_TRACK_MIN_SPEED_MPS, VEHICLE_PROGRESS_MAX_SPEED_MPS)
+    return _clamp_float(
+        track.velocity_mps,
+        VEHICLE_PROGRESS_TRACK_MIN_SPEED_MPS,
+        VEHICLE_PROGRESS_MAX_SPEED_MPS,
+    )
 
 
 def _vehicle_progress_stalled_buffer(track: _VehicleProgressTrack) -> int:
@@ -1211,7 +1243,12 @@ def _unique_strings(values: tuple[str, ...]) -> tuple[str, ...]:
     return tuple(result)
 
 
-def touch_route_geometry(connection: sqlite3.Connection, *, profile_key: str, updated_at: datetime | None = None) -> bool:
+def touch_route_geometry(
+    connection: sqlite3.Connection,
+    *,
+    profile_key: str,
+    updated_at: datetime | None = None,
+) -> bool:
     updated_at = updated_at or now_local()
     cursor = connection.execute(
         "UPDATE route_geometry SET updated_at = ? WHERE profile_key = ?",
@@ -1300,8 +1337,14 @@ def _delete_prediction_lab_events_for_snapshots(connection: sqlite3.Connection, 
             f"DELETE FROM prediction_evaluations WHERE arrival_event_id IN ({arrival_placeholders})",
             arrival_ids,
         )
-    connection.execute(f"DELETE FROM prediction_events WHERE yandex_snapshot_id IN ({placeholders})", snapshot_ids)
-    connection.execute(f"DELETE FROM arrival_events WHERE yandex_snapshot_id IN ({placeholders})", snapshot_ids)
+    connection.execute(
+        f"DELETE FROM prediction_events WHERE yandex_snapshot_id IN ({placeholders})",
+        snapshot_ids,
+    )
+    connection.execute(
+        f"DELETE FROM arrival_events WHERE yandex_snapshot_id IN ({placeholders})",
+        snapshot_ids,
+    )
 
 
 def _forecast_from_snapshot_row(connection: sqlite3.Connection, row: sqlite3.Row) -> YandexLiveForecast:
@@ -1428,11 +1471,11 @@ def _trusted_forecast_has_eta(forecast: YandexLiveForecast) -> bool:
     return forecast_has_trusted_fresh_eta(forecast)
 
 
-def _forecast_predictions(forecast: YandexLiveForecast) -> tuple[tuple[YandexVehicle | None, int], ...]:
+def _forecast_predictions(
+    forecast: YandexLiveForecast,
+) -> tuple[tuple[YandexVehicle | None, int], ...]:
     vehicle_predictions = tuple(
-        (vehicle, int(vehicle.arrival_minutes))
-        for vehicle in forecast.vehicles
-        if vehicle.arrival_minutes is not None
+        (vehicle, int(vehicle.arrival_minutes)) for vehicle in forecast.vehicles if vehicle.arrival_minutes is not None
     )
     if vehicle_predictions:
         return vehicle_predictions
@@ -1727,7 +1770,12 @@ def _has_prior_prediction(
         "sampled_at < ?",
         "source = ?",
     ]
-    params: list[object] = [profile_key, since.isoformat(), arrived_at.isoformat(), SOURCE_TARGET_STOP_LIVE]
+    params: list[object] = [
+        profile_key,
+        since.isoformat(),
+        arrived_at.isoformat(),
+        SOURCE_TARGET_STOP_LIVE,
+    ]
     if vehicle_id:
         filters.append("(vehicle_id = '' OR vehicle_id = ?)")
         params.append(vehicle_id)
@@ -2207,7 +2255,13 @@ def _error_samples(
         "prediction_events.sampled_at < ?",
         "arrival_events.confidence IN ({})".format(",".join("?" for _ in arrival_confidences)),
     ]
-    params: list[object] = [profile_key, source, since.isoformat(), current_time.isoformat(), *arrival_confidences]
+    params: list[object] = [
+        profile_key,
+        source,
+        since.isoformat(),
+        current_time.isoformat(),
+        *arrival_confidences,
+    ]
     if bucket is not None:
         filters.append("prediction_evaluations.bucket = ?")
         params.append(bucket)
@@ -2244,7 +2298,11 @@ def _arrival_confidences_at_or_above(confidence: EtaConfidence) -> tuple[str, ..
     if confidence == EtaConfidence.MEDIUM:
         return (EtaConfidence.HIGH.value, EtaConfidence.MEDIUM.value)
     if confidence == EtaConfidence.LOW:
-        return (EtaConfidence.HIGH.value, EtaConfidence.MEDIUM.value, EtaConfidence.LOW.value)
+        return (
+            EtaConfidence.HIGH.value,
+            EtaConfidence.MEDIUM.value,
+            EtaConfidence.LOW.value,
+        )
     return tuple(item.value for item in EtaConfidence)
 
 

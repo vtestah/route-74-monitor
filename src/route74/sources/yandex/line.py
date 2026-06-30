@@ -79,9 +79,7 @@ class YandexLineTopology:
 def parse_line_payload(payload: dict[str, Any]) -> YandexLineTopology:
     data = _dict_value(payload.get("data"))
     threads = tuple(
-        thread
-        for item in _list_value(data.get("features"))
-        if (thread := _parse_thread(_dict_value(item))) is not None
+        thread for item in _list_value(data.get("features")) if (thread := _parse_thread(_dict_value(item))) is not None
     )
     active_thread_id = _thread_id(data.get("activeThread"))
     if not threads and isinstance(data.get("activeThread"), dict):

@@ -45,10 +45,17 @@ def register_prediction_lab_commands(subparsers: argparse._SubParsersAction) -> 
     calibration.add_argument("--window", choices=tuple(WINDOWS_BY_KEY), required=True)
     calibration.set_defaults(func=cmd_prediction_calibration)
 
-    backfill = subparsers.add_parser("prediction-backfill", help="Rebuild prediction lab events from stored Yandex snapshots.")
+    backfill = subparsers.add_parser(
+        "prediction-backfill",
+        help="Rebuild prediction lab events from stored Yandex snapshots.",
+    )
     backfill.add_argument("--window", choices=(*WINDOWS_BY_KEY, "all"), default="all")
     backfill.add_argument("--profile", choices=PROFILE_SELECTORS, default=ALL_PROFILES_KEY)
-    backfill.add_argument("--reset-existing", action="store_true", help="Delete and rebuild existing lab events for selected snapshots.")
+    backfill.add_argument(
+        "--reset-existing",
+        action="store_true",
+        help="Delete and rebuild existing lab events for selected snapshots.",
+    )
     backfill.set_defaults(func=cmd_prediction_backfill)
 
 

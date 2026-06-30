@@ -8,7 +8,6 @@ from types import MappingProxyType
 from route74.domain.profiles import PROFILE_KEYS
 from route74.models import NOVOSIBIRSK_TZ
 
-
 WEEKDAY_COUNT = 5
 
 
@@ -45,7 +44,9 @@ def _validate_window_key(value: object) -> None:
         raise ValueError("report window key must be a plain ASCII key")
 
 
-def validate_report_windows(windows: Iterable[ReportWindow]) -> tuple[ReportWindow, ...]:
+def validate_report_windows(
+    windows: Iterable[ReportWindow],
+) -> tuple[ReportWindow, ...]:
     validated = tuple(windows)
     if not validated:
         raise ValueError("report windows need at least one window")
@@ -99,9 +100,7 @@ REPORT_WINDOWS: tuple[ReportWindow, ...] = validate_report_windows(
         ),
     )
 )
-REPORT_WINDOWS_BY_KEY: Mapping[str, ReportWindow] = MappingProxyType(
-    {window.key: window for window in REPORT_WINDOWS}
-)
+REPORT_WINDOWS_BY_KEY: Mapping[str, ReportWindow] = MappingProxyType({window.key: window for window in REPORT_WINDOWS})
 REPORT_WINDOW_KEYS: tuple[str, ...] = tuple(REPORT_WINDOWS_BY_KEY)
 ALL_REPORT_WINDOWS_KEY = "all"
 REPORT_WINDOW_SELECTORS: tuple[str, ...] = (*REPORT_WINDOW_KEYS, ALL_REPORT_WINDOWS_KEY)
@@ -140,7 +139,9 @@ def matching_report_window(sampled_at: datetime, profile_key: str | None = None)
 
 def report_profiles_for_time(sampled_at: datetime) -> tuple[str, ...]:
     _validate_sampled_at(sampled_at)
-    return tuple(window.profile_key for window in REPORT_WINDOWS if matching_report_window(sampled_at, window.profile_key))
+    return tuple(
+        window.profile_key for window in REPORT_WINDOWS if matching_report_window(sampled_at, window.profile_key)
+    )
 
 
 def validate_report_datetime(label: str, value: datetime) -> None:

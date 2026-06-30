@@ -2,21 +2,21 @@ from __future__ import annotations
 
 import argparse
 
-from route74.cli.common import positive_int
 from route74.cli.bot_latency import register_bot_latency_command
 from route74.cli.bot_runtime import register_bot_runtime_command
+from route74.cli.common import positive_int
 from route74.cli.forecast_backtest import register_forecast_backtest_command
 from route74.cli.forecast_coverage import register_forecast_coverage_command
 from route74.cli.forecast_health import register_forecast_health_command
 from route74.cli.forecast_readiness import register_forecast_readiness_command
-from route74.cli.monitor import register_monitor_command
-from route74.cli.prediction_lab import register_prediction_lab_commands
-from route74.cli.support_snapshot import register_support_snapshot_command
-from route74.cli.support_report import register_support_report_command
 from route74.cli.formatting import (
     format_report_window_summary,
     format_yandex_telemetry_summary,
 )
+from route74.cli.monitor import register_monitor_command
+from route74.cli.prediction_lab import register_prediction_lab_commands
+from route74.cli.support_report import register_support_report_command
+from route74.cli.support_snapshot import register_support_snapshot_command
 from route74.domain.profiles import ALL_PROFILES_KEY, PROFILE_SELECTORS
 from route74.domain.reporting import ALL_REPORT_WINDOWS_KEY, REPORT_WINDOW_SELECTORS
 from route74.storage import (

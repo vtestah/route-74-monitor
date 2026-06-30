@@ -15,7 +15,6 @@ from collections.abc import Iterator
 from contextlib import redirect_stdout
 
 import pytest
-
 import route74.smoke as smoke_package
 
 # Heavy or environment-dependent smokes that are validated by the dedicated

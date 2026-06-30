@@ -18,7 +18,10 @@ from route74.storage import connect, init_db, summarize_yandex_forecast_window_c
 
 
 def register_forecast_coverage_command(subparsers: argparse._SubParsersAction) -> None:
-    coverage = subparsers.add_parser("forecast-coverage", help="Check forecast sample coverage across a report window.")
+    coverage = subparsers.add_parser(
+        "forecast-coverage",
+        help="Check forecast sample coverage across a report window.",
+    )
     coverage.add_argument("--window", choices=tuple(WINDOWS_BY_KEY), required=True)
     coverage.add_argument("--days", type=positive_int, default=DEFAULT_HISTORY_DAYS)
     coverage.add_argument("--min-samples", type=positive_int, default=DEFAULT_MIN_OBSERVATIONS)

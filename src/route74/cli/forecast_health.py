@@ -13,7 +13,11 @@ from route74.services.yandex_history import (
     DEFAULT_PRIMARY_BUCKET_MINUTES,
 )
 from route74.storage import connect, init_db, summarize_forecast_health
-from route74.storage.forecast_health import ForecastBucketGap, ForecastHealthSummary, ForecastWindowHealth
+from route74.storage.forecast_health import (
+    ForecastBucketGap,
+    ForecastHealthSummary,
+    ForecastWindowHealth,
+)
 from route74.support_actions import forecast_coverage_command_for_window
 
 
@@ -56,9 +60,9 @@ def format_forecast_health_summary(summary: ForecastHealthSummary, db_path: obje
     status = "ready" if summary.ready else "not_ready"
     lines = [
         (
-        f"forecast health status={status} days={summary.days} min_samples={summary.min_samples} "
-        f"min_days={summary.min_distinct_days} db={db_path}"
-    ),
+            f"forecast health status={status} days={summary.days} min_samples={summary.min_samples} "
+            f"min_days={summary.min_distinct_days} db={db_path}"
+        ),
         f"ready_windows={summary.ready_windows}/{summary.total_windows}",
         _format_collector(summary),
         _format_canary(summary),
@@ -80,16 +84,15 @@ def _format_collector(summary: ForecastHealthSummary) -> str:
 def _format_canary(summary: ForecastHealthSummary) -> str:
     canary = summary.canary
     checked = canary.latest_checked_at.strftime("%Y-%m-%d %H:%M") if canary.latest_checked_at else "-"
-    return (
-        f"canary={canary.status} risky_runs={canary.risky_runs} "
-        f"latest={checked} reason={canary.risk_reason}"
-    )
+    return f"canary={canary.status} risky_runs={canary.risky_runs} latest={checked} reason={canary.risk_reason}"
 
 
 def _format_window(window: ForecastWindowHealth) -> str:
     latest = window.latest_sampled_at.strftime("%Y-%m-%d %H:%M") if window.latest_sampled_at else "-"
     latest_arrival = window.latest_arrival_at.strftime("%Y-%m-%d %H:%M") if window.latest_arrival_at else "-"
-    latest_run = window.collector_latest_started_at.strftime("%Y-%m-%d %H:%M") if window.collector_latest_started_at else "-"
+    latest_run = (
+        window.collector_latest_started_at.strftime("%Y-%m-%d %H:%M") if window.collector_latest_started_at else "-"
+    )
     missing = ",".join(window.missing_bucket_labels) or "-"
     bucket_gaps = _format_bucket_gaps(window.bucket_gaps)
     parts = [
@@ -135,10 +138,13 @@ def _coverage_action(window: ForecastWindowHealth) -> str:
 
 
 def _format_bucket_gaps(gaps: tuple[ForecastBucketGap, ...]) -> str:
-    return ",".join(
-        (
-            f"{gap.label}:{gap.selected_sample_count}/{gap.min_samples}s,"
-            f"{gap.selected_distinct_days}/{gap.min_distinct_days}d,±{gap.selected_bucket_minutes}m"
+    return (
+        ",".join(
+            (
+                f"{gap.label}:{gap.selected_sample_count}/{gap.min_samples}s,"
+                f"{gap.selected_distinct_days}/{gap.min_distinct_days}d,±{gap.selected_bucket_minutes}m"
+            )
+            for gap in gaps
         )
-        for gap in gaps
-    ) or "-"
+        or "-"
+    )

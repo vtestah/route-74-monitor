@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-
 SELECTION_POLICY_NAME = "risk_adjusted_priority_with_quality_and_buffered_tie_override"
 EARLY_CONFLICT_MINUTES = 3
 MEDIUM_CONFIDENCE_EARLY_CONFLICT_MINUTES = 2
@@ -57,7 +56,9 @@ def select_prediction_key(candidates: tuple[PredictionSelectionCandidate, ...]) 
     return (early_candidate or selected).key
 
 
-def _validate_unique_candidate_keys(candidates: tuple[PredictionSelectionCandidate, ...]) -> None:
+def _validate_unique_candidate_keys(
+    candidates: tuple[PredictionSelectionCandidate, ...],
+) -> None:
     seen: set[str] = set()
     for candidate in candidates:
         if candidate.key in seen:
@@ -65,8 +66,15 @@ def _validate_unique_candidate_keys(candidates: tuple[PredictionSelectionCandida
         seen.add(candidate.key)
 
 
-def _priority_sort_key(candidate: PredictionSelectionCandidate) -> tuple[int, int, int, str]:
-    return candidate.priority, candidate.quality_rank, candidate.selection_minutes, candidate.key
+def _priority_sort_key(
+    candidate: PredictionSelectionCandidate,
+) -> tuple[int, int, int, str]:
+    return (
+        candidate.priority,
+        candidate.quality_rank,
+        candidate.selection_minutes,
+        candidate.key,
+    )
 
 
 def _materially_earlier_candidate(
@@ -78,7 +86,12 @@ def _materially_earlier_candidate(
         return None
     earliest = sorted(
         early_candidates,
-        key=lambda item: (item.selection_minutes, item.priority, item.quality_rank, item.key),
+        key=lambda item: (
+            item.selection_minutes,
+            item.priority,
+            item.quality_rank,
+            item.key,
+        ),
     )[0]
     if earliest.selection_minutes + selected.early_conflict_minutes <= selected.selection_minutes:
         return earliest
@@ -103,7 +116,12 @@ def _buffered_tie_candidate(
         return None
     return sorted(
         candidates_with_real_earlier_eta,
-        key=lambda item: (item.selection_minutes, item.priority, item.quality_rank, item.key),
+        key=lambda item: (
+            item.selection_minutes,
+            item.priority,
+            item.quality_rank,
+            item.key,
+        ),
     )[0]
 
 

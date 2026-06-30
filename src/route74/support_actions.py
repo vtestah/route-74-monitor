@@ -6,7 +6,6 @@ from pathlib import Path
 from route74.domain.reporting import report_window_by_key, report_window_for_profile
 from route74.domain.runtime_sources import BOT_EVENT_KINDS, BOT_EVENT_USER_REPLY
 
-
 DEFAULT_BOT_RUNTIME_HOURS = 24
 DEFAULT_BOT_RUNTIME_LIMIT = 8
 DEFAULT_BOT_LATENCY_HOURS = 24

@@ -1,19 +1,30 @@
 from __future__ import annotations
+
+import sqlite3
 from datetime import datetime, timedelta
 from math import ceil
 from pathlib import Path
 
 from route74.domain.commute import CommuteProfile
 from route74.domain.reporting import matching_report_window
-from route74.domain.yandex_history import DEFAULT_HISTORY_PERCENTILE, YandexHistoryPrediction, YandexHistoryScope
+from route74.domain.yandex_history import (
+    DEFAULT_HISTORY_PERCENTILE,
+    YandexHistoryPrediction,
+    YandexHistoryScope,
+)
 from route74.models import now_local
-from route74.storage.helpers import day_kind_weekdays
-from route74.storage import DEFAULT_DB, STORAGE_READ_ERRORS, connect, init_db, load_yandex_eta_history_for_profile_window
+from route74.storage import (
+    DEFAULT_DB,
+    STORAGE_READ_ERRORS,
+    connect,
+    init_db,
+    load_yandex_eta_history_for_profile_window,
+)
 from route74.storage.forecast_backtest import (
     summarize_yandex_forecast_backtest,
     validate_forecast_backtest_percentiles,
 )
-
+from route74.storage.helpers import day_kind_weekdays
 
 DEFAULT_HISTORY_DAYS = 14
 DEFAULT_MIN_OBSERVATIONS = 20
@@ -85,7 +96,10 @@ class YandexHistoryPredictor:
                     before=current_time,
                 )
                 values = history.arrival_minutes
-                if (len(values), history.distinct_service_days) > (best_count, best_days):
+                if (len(values), history.distinct_service_days) > (
+                    best_count,
+                    best_days,
+                ):
                     best_count = len(values)
                     best_days = history.distinct_service_days
                     best_bucket = bucket_minutes
@@ -114,8 +128,7 @@ class YandexHistoryPredictor:
             window_days=self._window_days,
             percentile=self._percentile,
             reason=(
-                f"insufficient_history:{best_count}/{self._min_observations};"
-                f"days:{best_days}/{self._min_history_days}"
+                f"insufficient_history:{best_count}/{self._min_observations};days:{best_days}/{self._min_history_days}"
             ),
             scope=scope,
             report_window_key=report_window_key or "",

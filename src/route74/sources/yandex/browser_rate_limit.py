@@ -9,7 +9,6 @@ from math import isfinite
 from pathlib import Path
 from typing import TextIO, TypeVar
 
-
 T = TypeVar("T")
 
 _BROWSER_LOCK = threading.Lock()
@@ -65,12 +64,7 @@ def _write_last_start(lock_file: TextIO, value: float) -> None:
 
 
 def _non_negative_finite_number(name: str, value: object) -> float:
-    if (
-        isinstance(value, bool)
-        or not isinstance(value, int | float)
-        or not isfinite(value)
-        or value < 0
-    ):
+    if isinstance(value, bool) or not isinstance(value, int | float) or not isfinite(value) or value < 0:
         raise ValueError(f"{name} must be a non-negative finite number")
     return float(value)
 

@@ -7,15 +7,7 @@ from datetime import datetime
 
 from route74.models import NOVOSIBIRSK_TZ
 from route74.sources.yandex.constants import max_raw_eta_minutes
-from route74.sources.yandex.trust import (
-    TRUSTED_ETA_SOURCE_METHODS,
-    UNTRUSTED_ETA_RAW_STATUSES,
-    UNTRUSTED_ETA_REASON_PREFIXES,
-    is_trusted_eta_observation,
-    is_trusted_eta_source,
-)
 from route74.storage.models import CountByKey
-
 
 WEEKDAYS = (0, 1, 2, 3, 4)
 WEEKENDS = (5, 6)
@@ -30,9 +22,7 @@ def arrival_minutes_from_json(raw_json: object) -> tuple[int, ...]:
         return ()
     max_minutes = max_raw_eta_minutes(None)
     return tuple(
-        item
-        for item in raw
-        if isinstance(item, int) and not isinstance(item, bool) and 0 <= item <= max_minutes
+        item for item in raw if isinstance(item, int) and not isinstance(item, bool) and 0 <= item <= max_minutes
     )
 
 
@@ -53,10 +43,7 @@ def optional_int_value(value: object) -> int | None:
 
 
 def count_rows(counts: Counter[str]) -> tuple[CountByKey, ...]:
-    return tuple(
-        CountByKey(key, count)
-        for key, count in sorted(counts.items(), key=lambda item: (-item[1], item[0]))
-    )
+    return tuple(CountByKey(key, count) for key, count in sorted(counts.items(), key=lambda item: (-item[1], item[0])))
 
 
 def count_table_rows(connection: sqlite3.Connection, table: str) -> int:
@@ -68,11 +55,7 @@ def count_table_rows(connection: sqlite3.Connection, table: str) -> int:
 def _table_identifier(table: str) -> str:
     if not isinstance(table, str) or not table:
         raise ValueError("table name is required")
-    if (
-        not table.isascii()
-        or table[0].isdigit()
-        or any(not (char.isalnum() or char == "_") for char in table)
-    ):
+    if not table.isascii() or table[0].isdigit() or any(not (char.isalnum() or char == "_") for char in table):
         raise ValueError("table name must be a simple SQLite identifier")
     return table
 

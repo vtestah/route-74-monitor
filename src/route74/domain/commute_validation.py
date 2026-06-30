@@ -100,10 +100,7 @@ def _validate_decision_shape(decision: object) -> None:
             raise ValueError("no-data departure decision must not have arrival or leave time")
         if decision.next_live_minutes:
             raise ValueError("no-data departure decision must not have next live minutes")
-        if (
-            decision.eta_consensus.selected_source is not None
-            or decision.eta_consensus.arrival_minutes is not None
-        ):
+        if decision.eta_consensus.selected_source is not None or decision.eta_consensus.arrival_minutes is not None:
             raise ValueError("no-data departure decision must not have ETA consensus")
         return
     if decision.urgency == DepartureUrgency.NO_DATA:
@@ -192,9 +189,7 @@ def _validate_optional_datetime(name: str, value: object) -> None:
 
 
 def _validate_next_live_minutes(value: object) -> None:
-    if not isinstance(value, tuple) or any(
-        _invalid_int(minutes) or minutes < 0 for minutes in value
-    ):
+    if not isinstance(value, tuple) or any(_invalid_int(minutes) or minutes < 0 for minutes in value):
         raise ValueError("departure decision next_live_minutes needs tuple of non-negative integers")
     if any(previous >= current for previous, current in zip(value, value[1:])):
         raise ValueError("departure decision next_live_minutes must be strictly increasing")

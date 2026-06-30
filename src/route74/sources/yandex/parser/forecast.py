@@ -13,7 +13,11 @@ from route74.sources.yandex.models import (
 from route74.sources.yandex.parser.containers import find_vehicles
 from route74.sources.yandex.parser.direction import filter_expected_thread
 from route74.sources.yandex.parser.eta_limits import filter_raw_eta_limit
-from route74.sources.yandex.parser.route_vehicles import confidence_for_age, newest_age_seconds, route_vehicle_forecast
+from route74.sources.yandex.parser.route_vehicles import (
+    confidence_for_age,
+    newest_age_seconds,
+    route_vehicle_forecast,
+)
 from route74.sources.yandex.parser.vehicle import parse_vehicle
 
 
@@ -42,9 +46,7 @@ def parse_vehicles_payload(
         )
 
     parsed_vehicles = tuple(
-        parse_vehicle(item, index, current_time)
-        for index, item in enumerate(vehicles_raw)
-        if isinstance(item, dict)
+        parse_vehicle(item, index, current_time) for index, item in enumerate(vehicles_raw) if isinstance(item, dict)
     )
     vehicles, direction_reason = filter_expected_thread(parsed_vehicles, profile)
     vehicles, eta_limit_reason = filter_raw_eta_limit(vehicles, profile)
@@ -66,7 +68,9 @@ def parse_vehicles_payload(
     return _forecast_from_vehicles(vehicles, source_method, eta_limit_reason)
 
 
-def _vehicles_with_coordinates(vehicles: tuple[YandexVehicle, ...]) -> tuple[YandexVehicle, ...]:
+def _vehicles_with_coordinates(
+    vehicles: tuple[YandexVehicle, ...],
+) -> tuple[YandexVehicle, ...]:
     return tuple(vehicle for vehicle in vehicles if vehicle.lat is not None and vehicle.lng is not None)
 
 

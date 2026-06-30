@@ -4,7 +4,6 @@ from typing import Any
 
 from route74.sources.yandex.parser.common import as_float, number_at
 
-
 ROUTE74_LAT_RANGE = (54.6, 55.2)
 ROUTE74_LNG_RANGE = (82.6, 83.6)
 
@@ -33,7 +32,9 @@ def coordinates(item: dict[str, Any]) -> tuple[float | None, float | None]:
     return None, None
 
 
-def coordinates_from_geometry(geometry: dict[str, Any]) -> tuple[float | None, float | None]:
+def coordinates_from_geometry(
+    geometry: dict[str, Any],
+) -> tuple[float | None, float | None]:
     return _last_coord_pair(geometry.get("coordinates"))
 
 
@@ -74,7 +75,9 @@ def _last_coord_pair(value: Any) -> tuple[float | None, float | None]:
     return None, None
 
 
-def _coordinates_from_features(item: dict[str, Any]) -> tuple[float | None, float | None]:
+def _coordinates_from_features(
+    item: dict[str, Any],
+) -> tuple[float | None, float | None]:
     features = item.get("features")
     if not isinstance(features, list):
         return None, None

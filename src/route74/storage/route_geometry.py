@@ -8,7 +8,6 @@ from math import asin, cos, isfinite, radians, sin, sqrt
 
 from route74.sources.yandex.constants import ROUTE_TRAFFIC_POINTS_BY_PROFILE
 
-
 EARTH_RADIUS_METERS = 6_371_000
 ROUTE_GEOMETRY_MAX_AGE_DAYS = 14
 

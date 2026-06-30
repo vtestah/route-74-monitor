@@ -1,7 +1,11 @@
 from __future__ import annotations
 
-from route74.sources.yandex.models import YandexLiveForecast, YandexSourceMethod, YandexSourceMode, YandexSourceStatus
-
+from route74.sources.yandex.models import (
+    YandexLiveForecast,
+    YandexSourceMethod,
+    YandexSourceMode,
+    YandexSourceStatus,
+)
 
 FALLBACK_PRIORITY = {
     YandexSourceStatus.COORDINATES_ONLY: 0,
@@ -22,7 +26,9 @@ def http_result_is_final(forecast: YandexLiveForecast, mode: YandexSourceMode) -
 
 
 def browser_result_is_final(forecast: YandexLiveForecast, mode: YandexSourceMode) -> bool:
-    return forecast.available or mode == YandexSourceMode.BROWSER or forecast.status == YandexSourceStatus.COORDINATES_ONLY
+    return (
+        forecast.available or mode == YandexSourceMode.BROWSER or forecast.status == YandexSourceStatus.COORDINATES_ONLY
+    )
 
 
 def better_fallback(

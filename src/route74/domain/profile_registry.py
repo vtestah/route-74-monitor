@@ -90,9 +90,7 @@ def _index_profiles(
             raise ValueError(f"duplicate profile key: {profile.key}")
         owner = stop_ids.get(profile.live_stop_id)
         if owner is not None:
-            raise ValueError(
-                f"duplicate live stop id: {profile.live_stop_id} ({owner}, {profile.key})"
-            )
+            raise ValueError(f"duplicate live stop id: {profile.live_stop_id} ({owner}, {profile.key})")
         indexed[profile.key] = profile
         stop_ids[profile.live_stop_id] = profile.key
     return indexed
@@ -101,10 +99,7 @@ def _index_profiles(
 def _validate_non_overlapping_windows(profiles: tuple[CommuteProfile, ...]) -> None:
     for index, profile in enumerate(profiles):
         for other in profiles[index + 1 :]:
-            if (
-                profile.window_start <= other.window_end
-                and other.window_start <= profile.window_end
-            ):
+            if profile.window_start <= other.window_end and other.window_start <= profile.window_end:
                 raise ValueError(
                     f"profile windows overlap: {profile.key} and {other.key}",
                 )

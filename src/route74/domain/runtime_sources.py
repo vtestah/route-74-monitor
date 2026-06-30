@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 RUNTIME_SOURCE_NONE = ""
 RUNTIME_SOURCE_WEB_APP = "web_app"
 

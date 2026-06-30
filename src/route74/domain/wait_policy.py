@@ -7,7 +7,6 @@ from route74.domain.eta_policy import (
     MEDIUM_TARGET_WAIT_MINUTES,
 )
 
-
 TARGET_STOP_WAIT_MINUTES = 2
 
 

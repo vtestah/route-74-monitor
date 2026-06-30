@@ -3,15 +3,18 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from collections.abc import Callable
 from dataclasses import replace
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Callable
 
 from route74.diagnostics import sanitize_diagnostic_text
 from route74.domain.commute import CommuteProfile, DepartureDecision
 from route74.domain.runtime_sources import BOT_EVENT_WATCH_EARLY, BOT_EVENT_WATCH_FINAL
-from route74.domain.watch_policy import WATCH_DURATION_MINUTES, WATCH_POLL_INTERVAL_SECONDS
+from route74.domain.watch_policy import (
+    WATCH_DURATION_MINUTES,
+    WATCH_POLL_INTERVAL_SECONDS,
+)
 from route74.models import now_local
 from route74.notifications import NotificationMessage, Notifier
 from route74.presenters.commute import format_watch_alert
@@ -20,7 +23,6 @@ from route74.storage.runtime_predictions import BotDecisionRecorder
 from route74.watch_state import WatchState, load_watch_states, watch_state_json
 from route74.web.runtime_metrics import elapsed_ms, now_perf, watch_notification_event
 from route74.web.watch_rules import is_early, is_final
-
 
 WATCH_DURATION = timedelta(minutes=WATCH_DURATION_MINUTES)
 POLL_INTERVAL = timedelta(seconds=WATCH_POLL_INTERVAL_SECONDS)
@@ -43,7 +45,10 @@ class WebWatchStore:
     def save(self, states: tuple[WatchState, ...]) -> None:
         data = {state.watch_key: watch_state_json(state) for state in states}
         self._path.parent.mkdir(parents=True, exist_ok=True)
-        self._path.write_text(json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        self._path.write_text(
+            json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
 
 
 class WebWatchManager:
@@ -68,7 +73,12 @@ class WebWatchManager:
     def list_states(self) -> tuple[WatchState, ...]:
         return tuple(sorted(self._watches.values(), key=lambda state: state.profile.key))
 
-    def start(self, profile: CommuteProfile, walk_minutes: int, initial_decision: DepartureDecision) -> WatchState | None:
+    def start(
+        self,
+        profile: CommuteProfile,
+        walk_minutes: int,
+        initial_decision: DepartureDecision,
+    ) -> WatchState | None:
         watch_key = profile.key
         if is_final(initial_decision):
             self._watches.pop(watch_key, None)
@@ -150,7 +160,11 @@ class WebWatchManager:
             return replace(updated, next_poll_at=now + POLL_INTERVAL)
 
         title = f"Route 74 · {decision.profile.key}"
-        message = NotificationMessage(title=title, body=_watch_message(decision, alert_kind), priority=1 if alert_kind == "final" else 0)
+        message = NotificationMessage(
+            title=title,
+            body=_watch_message(decision, alert_kind),
+            priority=1 if alert_kind == "final" else 0,
+        )
         send_started = now_perf()
         result = self._notifier.send(message)
         send_ms = elapsed_ms(send_started)

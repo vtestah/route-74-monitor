@@ -15,7 +15,6 @@ from route74.env import (
 )
 from route74.storage import DEFAULT_DB
 
-
 ENV_DASHBOARD_HOST = "ROUTE74_DASHBOARD_HOST"
 ENV_DASHBOARD_PORT = "ROUTE74_DASHBOARD_PORT"
 ENV_DASHBOARD_ALLOW_PUBLIC = "ROUTE74_DASHBOARD_ALLOW_PUBLIC"
@@ -53,7 +52,11 @@ def parse_dashboard_config(argv: list[str] | None = None) -> DashboardConfig:
     host = args.host if args.host is not None else _env_host(file_env)
     port = args.port if args.port is not None else _env_port(file_env)
     db_path = args.db or Path(_env_value(ENV_DB_PATH, file_env, str(DEFAULT_DB)))
-    allow_public = parse_bool_env(ENV_DASHBOARD_ALLOW_PUBLIC, _optional_env_value(ENV_DASHBOARD_ALLOW_PUBLIC, file_env), False)
+    allow_public = parse_bool_env(
+        ENV_DASHBOARD_ALLOW_PUBLIC,
+        _optional_env_value(ENV_DASHBOARD_ALLOW_PUBLIC, file_env),
+        False,
+    )
     if not allow_public and not _is_loopback(host):
         raise SystemExit(f"{ENV_DASHBOARD_ALLOW_PUBLIC}=1 is required for non-loopback host {host!r}.")
     return DashboardConfig(host=host, port=port, db_path=db_path, env_file=env_file)

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from route74.sources.yandex.models import YandexLiveForecast, YandexVehicle
 
-
 DEFAULT_FRESH_VEHICLE_MAX_AGE_SECONDS = 180
 
 
@@ -33,7 +32,11 @@ def effective_forecast_age_seconds(forecast: YandexLiveForecast) -> int | None:
     return min(ages) if ages else None
 
 
-def is_fresh_age(age_seconds: int | None, *, max_age_seconds: int | None = DEFAULT_FRESH_VEHICLE_MAX_AGE_SECONDS) -> bool:
+def is_fresh_age(
+    age_seconds: int | None,
+    *,
+    max_age_seconds: int | None = DEFAULT_FRESH_VEHICLE_MAX_AGE_SECONDS,
+) -> bool:
     if age_seconds is None or max_age_seconds is None:
         return True
     if _valid_age_seconds(age_seconds) is None or _valid_age_seconds(max_age_seconds) is None:

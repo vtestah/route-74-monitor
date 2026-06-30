@@ -5,7 +5,11 @@ from datetime import datetime
 from pathlib import Path
 
 from route74.models import now_local
-from route74.watch_state import DEFAULT_WATCH_STATE_PATH, format_watch_state_summary, summarize_watch_state
+from route74.watch_state import (
+    DEFAULT_WATCH_STATE_PATH,
+    format_watch_state_summary,
+    summarize_watch_state,
+)
 
 
 def register_watch_state_command(subparsers: argparse._SubParsersAction) -> None:

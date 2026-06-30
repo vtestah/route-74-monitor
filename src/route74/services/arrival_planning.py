@@ -11,11 +11,17 @@ from route74.domain.eta import (
     EtaExplanationCode,
     EtaSource,
 )
-from route74.sources.yandex.trust import forecast_has_trusted_fresh_eta, trusted_arrivals_for_forecast
-
+from route74.sources.yandex.trust import (
+    forecast_has_trusted_fresh_eta,
+    trusted_arrivals_for_forecast,
+)
 
 SKIP_MISSED_LIVE_WARNING = "ближайший 74-й уже не успеть, планирую следующий"
-LIVE_CONTEXT_SOURCES = {EtaSource.YANDEX, EtaSource.YANDEX_CORRECTED, EtaSource.VEHICLE_PROGRESS}
+LIVE_CONTEXT_SOURCES = {
+    EtaSource.YANDEX,
+    EtaSource.YANDEX_CORRECTED,
+    EtaSource.VEHICLE_PROGRESS,
+}
 
 
 @dataclass(frozen=True)

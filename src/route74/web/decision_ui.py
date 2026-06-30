@@ -16,7 +16,6 @@ from route74.presenters.eta_explanations import (
 from route74.sources.yandex.freshness import forecast_is_fresh
 from route74.sources.yandex.models import YandexSourceStatus
 
-
 DecisionUiStatus = Literal["catch", "wait", "missed", "no_eta"]
 DecisionUiEtaState = Literal["live", "stale", "history", "no_eta"]
 
@@ -83,8 +82,10 @@ def _eta_state(decision: DepartureDecision) -> tuple[DecisionUiEtaState, str]:
     if decision.source == DepartureSource.YANDEX_HISTORY:
         return "history", "ETA по истории"
     forecast = decision.yandex_forecast
-    if forecast.enabled and forecast.available and (
-        forecast.status == YandexSourceStatus.STALE or not forecast_is_fresh(forecast)
+    if (
+        forecast.enabled
+        and forecast.available
+        and (forecast.status == YandexSourceStatus.STALE or not forecast_is_fresh(forecast))
     ):
         return "stale", "ETA устарел"
     return "live", "ETA live"

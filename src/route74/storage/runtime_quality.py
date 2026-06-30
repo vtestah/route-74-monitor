@@ -9,9 +9,12 @@ from datetime import datetime, timedelta
 from statistics import median
 
 from route74.domain.eta import EtaFactorKind
-from route74.domain.runtime_sources import BOT_EVENT_KINDS, BOT_EVENT_USER_REPLY, RUNTIME_SOURCE_WEB_APP
+from route74.domain.runtime_sources import (
+    BOT_EVENT_KINDS,
+    BOT_EVENT_USER_REPLY,
+    RUNTIME_SOURCE_WEB_APP,
+)
 from route74.storage.models import percent
-
 
 BOT_RUNTIME_SOURCE = RUNTIME_SOURCE_WEB_APP
 GUARDRAIL_UNAVAILABLE_FACTOR_KIND = EtaFactorKind.GUARDRAIL_UNAVAILABLE.value
@@ -362,7 +365,10 @@ def _calibration_groups(
         grouped.setdefault(key, []).append(item)
     return tuple(
         _calibration_group(key, tuple(items), min_evaluated=min_evaluated)
-        for key, items in sorted(grouped.items(), key=lambda entry: (-_evaluated_count(tuple(entry[1])), entry[0]))
+        for key, items in sorted(
+            grouped.items(),
+            key=lambda entry: (-_evaluated_count(tuple(entry[1])), entry[0]),
+        )
     )
 
 
@@ -454,7 +460,10 @@ def _percentile_minutes(values: tuple[int, ...], percentile: int) -> int | None:
     if not values:
         return None
     sorted_values = sorted(values)
-    index = max(0, min(len(sorted_values) - 1, math.ceil(percentile * len(sorted_values) / 100) - 1))
+    index = max(
+        0,
+        min(len(sorted_values) - 1, math.ceil(percentile * len(sorted_values) / 100) - 1),
+    )
     return sorted_values[index]
 
 
@@ -488,12 +497,16 @@ def _p50_abs_error_minutes(predictions: tuple[BotRuntimePrediction, ...]) -> int
     return round(median(values)) if values else None
 
 
-def _latest_evaluated_at(predictions: tuple[BotRuntimePrediction, ...]) -> datetime | None:
+def _latest_evaluated_at(
+    predictions: tuple[BotRuntimePrediction, ...],
+) -> datetime | None:
     values = tuple(item.evaluated_at for item in predictions if item.evaluated_at is not None)
     return max(values) if values else None
 
 
-def _oldest_pending_sampled_at(predictions: tuple[BotRuntimePrediction, ...]) -> datetime | None:
+def _oldest_pending_sampled_at(
+    predictions: tuple[BotRuntimePrediction, ...],
+) -> datetime | None:
     values = tuple(item.sampled_at for item in predictions if item.error_minutes is None)
     return min(values) if values else None
 

@@ -7,7 +7,12 @@ from datetime import datetime, time, timedelta
 from route74.cli.common import local_time_hhmm, positive_int
 from route74.cli.forecast_formatting import format_forecast_readiness_summary
 from route74.domain.profiles import PROFILE_KEYS
-from route74.domain.reporting import REPORT_WINDOWS_BY_KEY as WINDOWS_BY_KEY, ReportWindow
+from route74.domain.reporting import (
+    REPORT_WINDOWS_BY_KEY as WINDOWS_BY_KEY,
+)
+from route74.domain.reporting import (
+    ReportWindow,
+)
 from route74.models import now_local
 from route74.services.yandex_history import (
     DEFAULT_FALLBACK_BUCKET_MINUTES,
@@ -67,13 +72,23 @@ def cmd_forecast_readiness(args: argparse.Namespace) -> None:
     print(format_forecast_readiness_summary(summary, args.db))
 
 
-def _target(window_key: str | None, profile_key: str | None, raw_time: time | None, day_kind: str) -> ReadinessTarget:
+def _target(
+    window_key: str | None,
+    profile_key: str | None,
+    raw_time: time | None,
+    day_kind: str,
+) -> ReadinessTarget:
     window = WINDOWS_BY_KEY.get(window_key) if window_key is not None else None
     profile = _profile_key(window, profile_key)
     target_time = _target_time(window, raw_time)
     current_time = _readiness_time(target_time)
     report_window_key = window.key if window is not None else None
-    return ReadinessTarget(profile, report_window_key, current_time, _weekdays(window, day_kind, current_time))
+    return ReadinessTarget(
+        profile,
+        report_window_key,
+        current_time,
+        _weekdays(window, day_kind, current_time),
+    )
 
 
 def _profile_key(window: ReportWindow | None, profile_key: str | None) -> str:

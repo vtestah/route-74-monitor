@@ -3,13 +3,13 @@ from __future__ import annotations
 import sqlite3
 from datetime import datetime
 
+from route74.storage.forecast_validation import validate_forecast_readiness_inputs
 from route74.storage.helpers import day_kind_weekdays
 from route74.storage.history import (
     load_yandex_eta_history_for_profile_window,
     load_yandex_forecast_sample_counts,
 )
 from route74.storage.models import ForecastReadinessSummary
-from route74.storage.forecast_validation import validate_forecast_readiness_inputs
 
 
 def summarize_yandex_forecast_readiness(
