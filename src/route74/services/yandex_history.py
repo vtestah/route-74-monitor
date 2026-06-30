@@ -135,7 +135,7 @@ class YandexHistoryPredictor:
 
     def _select_percentile(
         self,
-        connection: sqlite3.Connection,
+        connection: "sqlite3.Connection",  # noqa: F821
         *,
         profile: CommuteProfile,
         report_window_key: str | None,
@@ -159,7 +159,7 @@ class YandexHistoryPredictor:
 
     def _select_uncached_percentile(
         self,
-        connection: sqlite3.Connection,
+        connection: "sqlite3.Connection",  # noqa: F821
         *,
         profile: CommuteProfile,
         report_window_key: str | None,

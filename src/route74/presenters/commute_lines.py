@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from route74.domain.commute import DepartureDecision, DepartureSource, DepartureUrgency
 from route74.domain.departure_safety import (

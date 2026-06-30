@@ -7,7 +7,7 @@ from route74.build_info import format_build_status
 from route74.diagnostics import sanitize_diagnostic_text
 from route74.domain.commute import DepartureDecision
 from route74.domain.eta import EtaConfidence, EtaSource
-from route74.domain.yandex_history import DEFAULT_HISTORY_PERCENTILE, YandexHistoryPrediction
+from route74.domain.yandex_history import DEFAULT_HISTORY_PERCENTILE
 from route74.presenters.commute_lines import (
     current_time_line,
     direction_line,
