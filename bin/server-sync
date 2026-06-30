@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+SERVER="${ROUTE74_SERVER:-root@194.226.20.40}"
+SERVER_PATH="${ROUTE74_SERVER_PATH:-/opt/route74}"
+SSH_KEY="${ROUTE74_SSH_KEY:-$HOME/.ssh/id_rsa}"
+SSH_CMD="ssh -i $SSH_KEY -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
+PACKAGE_VERSION="$(
+  python3 - <<'PY'
+import tomllib
+from pathlib import Path
+
+print(tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))["project"]["version"])
+PY
+)"
+GIT_COMMIT="$(git rev-parse HEAD)"
+GIT_SHORT_COMMIT="$(git rev-parse --short HEAD)"
+GIT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+GIT_DIRTY=0
+if [ -n "$(git status --porcelain)" ]; then
+  GIT_DIRTY=1
+fi
+
+if [ "$GIT_DIRTY" -eq 1 ] && [ "${ROUTE74_ALLOW_DIRTY_DEPLOY:-0}" != "1" ]; then
+  echo "Refusing dirty deploy. Commit changes or set ROUTE74_ALLOW_DIRTY_DEPLOY=1."
+  git status --short
+  exit 1
+fi
+
+build_file="$(mktemp)"
+trap 'rm -f "$build_file"' EXIT
+ROUTE74_BUILD_PACKAGE="$PACKAGE_VERSION" \
+ROUTE74_BUILD_COMMIT="$GIT_COMMIT" \
+ROUTE74_BUILD_SHORT_COMMIT="$GIT_SHORT_COMMIT" \
+ROUTE74_BUILD_BRANCH="$GIT_BRANCH" \
+ROUTE74_BUILD_DIRTY="$GIT_DIRTY" \
+ROUTE74_BUILD_DEPLOYED_AT="$(date -Iseconds)" \
+python3 - <<'PY' > "$build_file"
+import json
+import os
+
+payload = {
+    "package_version": os.environ["ROUTE74_BUILD_PACKAGE"],
+    "commit": os.environ["ROUTE74_BUILD_COMMIT"],
+    "short_commit": os.environ["ROUTE74_BUILD_SHORT_COMMIT"],
+    "branch": os.environ["ROUTE74_BUILD_BRANCH"],
+    "dirty": os.environ["ROUTE74_BUILD_DIRTY"] == "1",
+    "deployed_at": os.environ["ROUTE74_BUILD_DEPLOYED_AT"],
+    "source": "server-sync",
+}
+print(json.dumps(payload, ensure_ascii=False, indent=2))
+PY
+
+rsync -rlptDz --delete \
+  --chown=route74:route74 \
+  --exclude '.git/' \
+  --exclude '.route74-build.json' \
+  --exclude '.venv/' \
+  --exclude '.env' \
+  --exclude 'data/' \
+  --exclude 'build/' \
+  --exclude 'dist/' \
+  --exclude '*.egg-info/' \
+  --exclude '__pycache__/' \
+  --exclude '.pytest_cache/' \
+  --exclude '.mypy_cache/' \
+  --exclude '.ruff_cache/' \
+  -e "$SSH_CMD" \
+  ./ "$SERVER:$SERVER_PATH/"
+
+rsync -rlptDz --chown=route74:route74 -e "$SSH_CMD" "$build_file" "$SERVER:$SERVER_PATH/.route74-build.json"
+$SSH_CMD "$SERVER" "cd '$SERVER_PATH' && bash bin/server-update"

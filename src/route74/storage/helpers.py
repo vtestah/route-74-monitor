@@ -7,6 +7,13 @@ from datetime import datetime
 
 from route74.models import NOVOSIBIRSK_TZ
 from route74.sources.yandex.constants import max_raw_eta_minutes
+from route74.sources.yandex.trust import (
+    TRUSTED_ETA_SOURCE_METHODS,  # noqa: F401
+    UNTRUSTED_ETA_RAW_STATUSES,  # noqa: F401
+    UNTRUSTED_ETA_REASON_PREFIXES,  # noqa: F401
+    is_trusted_eta_observation,  # noqa: F401
+    is_trusted_eta_source,  # noqa: F401
+)
 from route74.storage.models import CountByKey
 
 WEEKDAYS = (0, 1, 2, 3, 4)

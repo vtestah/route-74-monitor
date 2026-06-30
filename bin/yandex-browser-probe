@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+if [ ! -x .venv/bin/python ]; then
+  echo "Missing .venv. Run ./bin/onboard first."
+  exit 1
+fi
+
+if ! .venv/bin/python - <<'PY' >/dev/null 2>&1
+import playwright
+PY
+then
+  echo "Playwright is not installed."
+  echo "Run:"
+  echo "  .venv/bin/python -m pip install -e '.[yandex]'"
+  echo "  .venv/bin/python -m playwright install chromium"
+  exit 1
+fi
+
+.venv/bin/python - <<'PY'
+from route74.domain.profiles import MORNING
+from route74.models import now_local
+from route74.sources.yandex.config import YandexSourceConfig
+from route74.sources.yandex.models import YandexSourceMode
+from route74.sources.yandex.transport import YandexTransportSource
+
+config = YandexSourceConfig(mode=YandexSourceMode.BROWSER, timeout_seconds=15, debug=True)
+forecast = YandexTransportSource(config).get_forecast(MORNING, now_local())
+print(
+    "Yandex browser probe:",
+    f"source={forecast.source_method.value}",
+    f"status={forecast.status.value}",
+    f"eta={forecast.arrival_minutes[0] if forecast.arrival_minutes else None}",
+    f"vehicles={forecast.vehicle_count}",
+    f"reason={forecast.fallback_reason or '-'}",
+)
+PY

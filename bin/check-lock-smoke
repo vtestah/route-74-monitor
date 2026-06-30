@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+temp_dir="$(mktemp -d)"
+trap 'rm -rf "$temp_dir"' EXIT
+
+lock_path="$temp_dir/check.lock"
+: >"$lock_path"
+exec 8<>"$lock_path"
+flock -n 8
+printf '4242\theld-by-smoke\n' >"$lock_path"
+
+set +e
+output="$(ROUTE74_CHECK_LOCK="$lock_path" ./bin/check 8>&- 2>&1)"
+status=$?
+set -e
+
+if [ "$status" -ne 75 ]; then
+  echo "nested ./bin/check should exit 75 while a lock is held; got $status"
+  if [ -n "$output" ]; then
+    echo "$output"
+  fi
+  exit 1
+fi
+
+if ! grep -Fq "./bin/check is already running for this worktree by pid 4242." <<<"$output"; then
+  echo "nested ./bin/check should print the lock owner pid."
+  echo "$output"
+  exit 1
+fi
+
+if ! grep -Fq "Current step: held-by-smoke" <<<"$output"; then
+  echo "nested ./bin/check should print the lock owner step."
+  echo "$output"
+  exit 1
+fi
+
+if ! grep -Fq "Wait for it to finish instead of starting a parallel check." <<<"$output"; then
+  echo "nested ./bin/check should explain what to do next."
+  echo "$output"
+  exit 1
+fi
+
+echo "OK | check lock smoke passed"

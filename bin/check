@@ -1,0 +1,292 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+export PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}"
+export PYTHONDONTWRITEBYTECODE=1
+
+python_bin=".venv/bin/python"
+
+check_lock_path="${ROUTE74_CHECK_LOCK:-data/check.lock}"
+check_lock_dir="$(dirname "$check_lock_path")"
+mkdir -p "$check_lock_dir"
+exec 9<>"$check_lock_path"
+if ! flock -n 9; then
+  owner_pid=""
+  owner_step=""
+  read -r owner_pid owner_step <"$check_lock_path" 2>/dev/null || true
+  owner_pid="$(printf '%s' "$owner_pid" | tr -cd '0-9')"
+  if [ -n "$owner_pid" ]; then
+    echo "./bin/check is already running for this worktree by pid $owner_pid."
+  else
+    echo "./bin/check is already running for this worktree."
+  fi
+  if [ -n "$owner_step" ]; then
+    echo "Current step: $owner_step"
+  fi
+  echo "Wait for it to finish instead of starting a parallel check."
+  exit 75
+fi
+
+update_check_lock() {
+  printf '%s\t%s\n' "$$" "$1" >"$check_lock_path"
+}
+
+check_step() {
+  local step="$1"
+  shift
+  local start
+  local status
+  local elapsed
+  update_check_lock "$step"
+  echo "=== $step ==="
+  start="$(date +%s)"
+  set +e
+  "$@"
+  status=$?
+  set -e
+  elapsed="$(($(date +%s) - start))"
+  if [ "$status" -ne 0 ]; then
+    echo "FAIL | $step failed after ${elapsed}s"
+    exit "$status"
+  fi
+  echo "OK | $step passed (${elapsed}s)"
+}
+
+check_quiet_step() {
+  local step="$1"
+  shift
+  local start
+  local status
+  local output_file
+  local elapsed
+  update_check_lock "$step"
+  echo "=== $step ==="
+  start="$(date +%s)"
+  output_file="$(mktemp)"
+  set +e
+  "$@" >"$output_file" 2>&1
+  status=$?
+  set -e
+  elapsed="$(($(date +%s) - start))"
+  if [ "$status" -ne 0 ]; then
+    echo "FAIL | $step failed after ${elapsed}s"
+    if [ -s "$output_file" ]; then
+      cat "$output_file"
+    fi
+    rm -f "$output_file"
+    exit "$status"
+  fi
+  rm -f "$output_file"
+  echo "OK | $step passed (${elapsed}s)"
+}
+
+clean_python_bytecode() {
+  find src -type d -name __pycache__ -prune -exec rm -rf {} +
+  find src -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
+}
+
+assert_cli_rejects() {
+  local description="$1"
+  local expected="$2"
+  shift 2
+  local output
+  local status
+  update_check_lock "reject: $description"
+  echo "=== reject: $description ==="
+  set +e
+  output="$("$@" 2>&1)"
+  status=$?
+  set -e
+  if [ "$status" -eq 0 ]; then
+    echo "$description should reject invalid arguments."
+    exit 1
+  fi
+  if grep -q 'Traceback' <<<"$output"; then
+    echo "$description should not print a traceback."
+    echo "$output"
+    exit 1
+  fi
+  if ! grep -Fq "$expected" <<<"$output"; then
+    echo "$description should mention: $expected"
+    echo "$output"
+    exit 1
+  fi
+  echo "OK | $description rejected"
+}
+
+check_worktree_import() {
+  local actual
+  local expected
+  expected="$("$python_bin" -B - <<'PY'
+from pathlib import Path
+
+print(Path("src/route74/__init__.py").resolve())
+PY
+)"
+  actual="$("$python_bin" -B - <<'PY'
+from pathlib import Path
+
+import route74
+
+print(Path(route74.__file__).resolve())
+PY
+)"
+  if [ "$actual" != "$expected" ]; then
+    echo "route74 import should use current worktree source."
+    echo "expected: $expected"
+    echo "actual: $actual"
+    exit 1
+  fi
+}
+
+check_shell_syntax() {
+  local script
+  while IFS= read -r -d '' script; do
+    if head -n 1 "$script" | grep -Eq '^#!.*\bbash$'; then
+      bash -n "$script"
+    fi
+  done < <(find bin -maxdepth 1 -type f -print0 | sort -z)
+}
+
+run_python_module() {
+  local module="$1"
+  local output_file
+  local status
+  local start
+  local elapsed
+  update_check_lock "python: $module"
+  echo "=== python: $module ==="
+  start="$(date +%s)"
+  output_file="$(mktemp)"
+  set +e
+  "$python_bin" -B -m "$module" >"$output_file" 2>&1
+  status=$?
+  set -e
+  elapsed="$(($(date +%s) - start))"
+  if [ "$status" -ne 0 ]; then
+    echo "FAIL | python: $module failed after ${elapsed}s"
+    if [ -s "$output_file" ]; then
+      cat "$output_file"
+    fi
+    rm -f "$output_file"
+    exit "$status"
+  fi
+  rm -f "$output_file"
+  echo "OK | python: $module passed (${elapsed}s)"
+}
+
+run_package_smokes() {
+  local module
+  local smoke
+  while IFS= read -r -d '' smoke; do
+    module="${smoke#src/}"
+    module="${module%.py}"
+    module="${module//\//.}"
+    run_python_module "$module"
+  done < <(find src/route74/smoke -maxdepth 1 -type f -name '*_smoke.py' -print0 | sort -z)
+}
+
+check_step "check lock smoke" ./bin/check-lock-smoke
+check_step "agent harness" ./bin/validate-agent-harness
+check_step "ai-first audit" ./bin/ai-first-audit
+check_quiet_step "memory consolidate stats" ./bin/memory-consolidate --stats
+check_quiet_step "memory recall smoke" ./bin/memory-recall "route74 web app"
+
+if [ ! -x "$python_bin" ]; then
+  echo "Missing .venv. Run ./bin/onboard first."
+  exit 1
+fi
+
+if [ ! -x .venv/bin/route74 ] || [ ! -x .venv/bin/route74-web ]; then
+  check_quiet_step "install package" ./bin/install
+fi
+
+check_step "worktree import" check_worktree_import
+check_step "bin shell syntax" check_shell_syntax
+check_quiet_step "python compileall" "$python_bin" -B -m compileall -q src
+check_quiet_step "python bytecode cleanup" clean_python_bytecode
+check_quiet_step "route74 help" .venv/bin/route74 --help
+check_quiet_step "route74 version" .venv/bin/route74 version
+check_quiet_step "route74 version plain" .venv/bin/route74 version --plain
+check_quiet_step "route74 explain" .venv/bin/route74 explain
+check_quiet_step "route74-web help" .venv/bin/route74-web --help
+check_quiet_step "web launcher help" ./bin/web --help
+check_quiet_step "web remote help" ./bin/web-remote --help
+check_quiet_step "dashboard launcher help" ./bin/dashboard --help
+run_package_smokes
+check_quiet_step "web smoke" ./bin/smoke-web-local
+
+check_db_dir="$(mktemp -d)"
+trap 'rm -rf "$check_db_dir"' EXIT
+check_quiet_step "cli db-health" .venv/bin/route74 --db "$check_db_dir/db-health.sqlite" db-health
+check_quiet_step "cli db-migrations" .venv/bin/route74 --db "$check_db_dir/db-health.sqlite" db-migrations
+check_quiet_step "cli yandex-stats" .venv/bin/route74 --db "$check_db_dir/yandex-stats.sqlite" yandex-stats
+check_quiet_step "cli runtime-latency" .venv/bin/route74 --db "$check_db_dir/runtime-latency.sqlite" runtime-latency
+check_quiet_step "cli support-report profile" \
+  .venv/bin/route74 --db "$check_db_dir/support-report-profile.sqlite" support-report --profile morning
+check_quiet_step "cli report-stats" .venv/bin/route74 --db "$check_db_dir/report-stats.sqlite" report-stats
+check_quiet_step "cli forecast-readiness" \
+  .venv/bin/route74 --db "$check_db_dir/readiness.sqlite" forecast-readiness --window weekday_morning_09_12
+check_quiet_step "cli forecast-coverage" \
+  .venv/bin/route74 --db "$check_db_dir/coverage.sqlite" forecast-coverage --window weekday_morning_09_12
+check_quiet_step "cli forecast-health" .venv/bin/route74 --db "$check_db_dir/health.sqlite" forecast-health
+
+assert_cli_rejects \
+  "forecast-readiness invalid --at" \
+  "expected HH:MM" \
+  .venv/bin/route74 forecast-readiness --profile morning --at nope
+assert_cli_rejects \
+  "forecast-readiness missing target" \
+  "needs --window or --profile" \
+  .venv/bin/route74 forecast-readiness
+assert_cli_rejects \
+  "support-report missing target" \
+  "support-report needs --window or --profile" \
+  .venv/bin/route74 support-report
+assert_cli_rejects \
+  "forecast-coverage invalid --step-minutes" \
+  "must be a positive integer" \
+  .venv/bin/route74 forecast-coverage --window weekday_morning_09_12 --step-minutes 0
+assert_cli_rejects \
+  "yandex-stats invalid --hours" \
+  "must be a positive integer" \
+  .venv/bin/route74 yandex-stats --hours 0
+
+"$python_bin" - <<'PY'
+import tempfile
+from pathlib import Path
+
+from route74.env import load_env_file
+from route74.notifications import load_pushover_config
+from route74.web.config import parse_web_config
+
+with tempfile.TemporaryDirectory() as temp_dir:
+    env_path = Path(temp_dir) / ".env"
+    env_path.write_text(
+        "\n".join(
+            [
+                "ROUTE74_WEB_HOST=127.0.0.1",
+                "ROUTE74_WEB_PORT=8074",
+                "ROUTE74_DB_PATH=data/route74.sqlite",
+                "ROUTE74_WEB_WATCH_STATE_PATH=data/web_watches.json",
+                "PUSHOVER_APP_TOKEN=test-app",
+                "PUSHOVER_USER_KEY=test-user",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    env = load_env_file(env_path)
+    assert env["ROUTE74_WEB_PORT"] == "8074"
+    assert env["PUSHOVER_APP_TOKEN"] == "test-app"
+    config = parse_web_config(["--env-file", str(env_path)])
+    assert config.host == "127.0.0.1"
+    assert config.port == 8074
+    pushover = load_pushover_config(env_path)
+    assert pushover is not None
+    assert pushover.app_token == "test-app"
+PY
+
+check_quiet_step "package smoke" ./bin/package-smoke
+
+echo "OK | check passed"

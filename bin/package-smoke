@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+if [ ! -x .venv/bin/python ]; then
+  echo "Missing .venv. Run ./bin/onboard first."
+  exit 1
+fi
+
+repo_root="$PWD"
+python_bin="$repo_root/.venv/bin/python"
+twine_bin="$repo_root/.venv/bin/twine"
+work_dir="$(mktemp -d)"
+trap 'rm -rf "$work_dir"' EXIT
+
+rm -rf build src/*.egg-info
+"$python_bin" -m build --sdist --wheel --outdir "$work_dir/dist"
+"$python_bin" - "$work_dir"/dist/* <<'PY'
+from __future__ import annotations
+
+import configparser
+import sys
+import tarfile
+from pathlib import Path
+from zipfile import ZipFile
+
+
+REQUIRED_CONSOLE_SCRIPTS = {
+    "route74": "route74.cli:main",
+    "route74-web": "route74.web.runtime:main",
+}
+REQUIRED_PACKAGE_FILES = {
+    "route74/py.typed",
+}
+REMOVED_MODULES = {
+    "route74/bot/runtime.py",
+}
+
+
+def _archive_names(path: Path) -> set[str]:
+    if path.suffix == ".whl":
+        with ZipFile(path) as archive:
+            return set(archive.namelist())
+    with tarfile.open(path) as archive:
+        return {
+            name.split("/", 1)[1].removeprefix("src/")
+            for name in archive.getnames()
+            if "/" in name
+        }
+
+
+def _wheel_entry_points(path: Path) -> dict[str, str]:
+    with ZipFile(path) as archive:
+        candidates = [
+            name
+            for name in archive.namelist()
+            if name.endswith(".dist-info/entry_points.txt")
+        ]
+        if len(candidates) != 1:
+            raise SystemExit(f"{path.name} should contain one entry_points.txt")
+        parser = configparser.ConfigParser()
+        parser.read_string(archive.read(candidates[0]).decode("utf-8"))
+    if not parser.has_section("console_scripts"):
+        raise SystemExit(f"{path.name} is missing console_scripts entry points")
+    return dict(parser.items("console_scripts"))
+
+
+for artifact in (Path(path) for path in sys.argv[1:]):
+    archive_names = _archive_names(artifact)
+    missing_files = sorted(REQUIRED_PACKAGE_FILES - archive_names)
+    if missing_files:
+        raise SystemExit(
+            f"{artifact.name} is missing package files: {', '.join(missing_files)}"
+        )
+    stale_modules = sorted(REMOVED_MODULES & archive_names)
+    if stale_modules:
+        raise SystemExit(f"{artifact.name} contains stale removed modules: {', '.join(stale_modules)}")
+    if artifact.suffix == ".whl":
+        scripts = _wheel_entry_points(artifact)
+        for script, expected in REQUIRED_CONSOLE_SCRIPTS.items():
+            actual = scripts.get(script)
+            if actual != expected:
+                raise SystemExit(
+                    f"{artifact.name} entry point {script} should be {expected}, got {actual or '-'}"
+                )
+PY
+(
+  cd "$work_dir"
+  "$twine_bin" check "$work_dir"/dist/*
+)
+
+echo "OK | package smoke passed"

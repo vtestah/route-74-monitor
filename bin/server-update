@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+APP_USER="${ROUTE74_APP_USER:-route74}"
+PYTHON_BIN="${ROUTE74_PYTHON_BIN:-python3}"
+
+if [[ ! "$APP_USER" =~ ^[a-z_][a-z0-9_-]*[$]?$ ]]; then
+  echo "ROUTE74_APP_USER must be a system user name"
+  exit 2
+fi
+
+if [[ "$PYTHON_BIN" == -* || ! "$PYTHON_BIN" =~ ^[A-Za-z0-9_./+-]+$ ]]; then
+  echo "ROUTE74_PYTHON_BIN must be a command name or path without whitespace"
+  exit 2
+fi
+
+run_app() {
+  if [ "$(id -u)" -eq 0 ] && id "$APP_USER" >/dev/null 2>&1; then
+    sudo -u "$APP_USER" "$@"
+  else
+    "$@"
+  fi
+}
+
+run_app mkdir -p data
+
+if [ ! -d .venv ]; then
+  run_app "$PYTHON_BIN" -m venv .venv
+fi
+
+run_app .venv/bin/python -m pip install -U pip
+run_app .venv/bin/python -m pip install -e '.[yandex]'
+run_app .venv/bin/python -m compileall -q src
+run_app .venv/bin/python -m route74.smoke.commute_smoke >/dev/null
+run_app .venv/bin/python -m route74.smoke.web_runtime_smoke >/dev/null
+run_app .venv/bin/python -m route74.smoke.web_config_smoke >/dev/null
+run_app .venv/bin/route74-web --help >/dev/null
+run_app .venv/bin/route74 version >/dev/null
+run_app .venv/bin/route74 --db data/route74.sqlite forecast-health >/dev/null
+
+install_unit() {
+  local source_path="$1"
+  local target_path="$2"
+  if [ -f "$source_path" ]; then
+    install -m 0644 "$source_path" "$target_path"
+  fi
+}
+
+disable_legacy_unit() {
+  local unit_name="$1"
+  local unit_path="/etc/systemd/system/$unit_name"
+  if [ -f "$unit_path" ]; then
+    systemctl disable --now "$unit_name" >/dev/null 2>&1 || true
+    rm -f "$unit_path"
+  fi
+}
+
+if command -v systemctl >/dev/null 2>&1 && [ "$(id -u)" -eq 0 ]; then
+  install_unit deploy/systemd/route74-web.service /etc/systemd/system/route74-web.service
+  install_unit deploy/systemd/route74-yandex-collect.service /etc/systemd/system/route74-yandex-collect.service
+  disable_legacy_unit route74-bot.service
+  disable_legacy_unit route74-dashboard.service
+  systemctl daemon-reload
+  if systemctl list-unit-files route74-web.service >/dev/null 2>&1; then
+    systemctl enable route74-web
+    systemctl restart route74-web
+  fi
+  if systemctl list-unit-files route74-yandex-collect.service >/dev/null 2>&1; then
+    systemctl restart route74-yandex-collect
+  fi
+fi
+
+echo "OK | server update complete"

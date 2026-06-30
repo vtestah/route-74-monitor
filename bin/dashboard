@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+LOCAL_PORT="${ROUTE74_DASHBOARD_LOCAL_PORT:-8075}"
+DB_PATH="${ROUTE74_DB_PATH:-data/route74.sqlite}"
+
+usage() {
+  cat <<'EOF'
+Запуск старого операторского dashboard Route74.
+
+Команды:
+  ./bin/dashboard          запустить локальный dashboard со статистикой по сбору
+  ./bin/dashboard --help   показать справку
+  ./bin/dashboard ...      передать аргументы прямо в route74.dashboard.runtime
+
+Примеры:
+  ./bin/dashboard
+  ./bin/dashboard --port 8076
+  ./bin/dashboard --db data/route74.sqlite
+
+Переменные:
+  ROUTE74_DASHBOARD_LOCAL_PORT=8075
+  ROUTE74_DB_PATH=data/route74.sqlite
+EOF
+}
+
+require_port() {
+  local name="$1"
+  local value="$2"
+  if [[ ! "$value" =~ ^[0-9]+$ ]] || (( ${#value} > 5 )) || (( 10#$value < 1 || 10#$value > 65535 )); then
+    echo "$name must be an integer from 1 to 65535"
+    exit 2
+  fi
+}
+
+if [ ! -x .venv/bin/python ]; then
+  ./bin/install
+fi
+
+case "${1:-}" in
+  -h|--help)
+    usage
+    ;;
+  "")
+    require_port "ROUTE74_DASHBOARD_LOCAL_PORT" "$LOCAL_PORT"
+    echo "Открой: http://127.0.0.1:${LOCAL_PORT}"
+    exec .venv/bin/python -m route74.dashboard.runtime --db "$DB_PATH" --host 127.0.0.1 --port "$LOCAL_PORT"
+    ;;
+  *)
+    exec .venv/bin/python -m route74.dashboard.runtime "$@"
+    ;;
+esac

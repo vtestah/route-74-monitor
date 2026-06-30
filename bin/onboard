@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+./bin/install
+./bin/install-launcher
+
+if [ ! -f .env ]; then
+  cp .env.example .env
+  echo "Created .env from .env.example"
+  echo "Open .env and, if нужны push-уведомления, set PUSHOVER_APP_TOKEN and PUSHOVER_USER_KEY."
+else
+  echo ".env already exists; leaving it untouched."
+fi
+
+cat <<'NEXT'
+
+Next:
+  route74-web
+
+Optional checks:
+  .venv/bin/route74 commute morning
+  .venv/bin/route74 commute evening
+  ./bin/smoke-web-local
+NEXT

@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+PYTHON_BIN="${ROUTE74_PYTHON_BIN:-python3}"
+VENV_DIR="${ROUTE74_VENV_DIR:-.venv}"
+
+require_python_311() {
+  local python_bin="$1"
+  local description="$2"
+  local remediation="${3:-}"
+  local python_version
+
+  python_version="$("$python_bin" - <<'PY'
+import sys
+
+print(f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}")
+raise SystemExit(0 if sys.version_info >= (3, 11) else 1)
+PY
+)" || {
+    echo "Route74 requires Python 3.11+; $description is ${python_version:-unavailable}${remediation}"
+    exit 1
+  }
+}
+
+require_python_311 "$PYTHON_BIN" "$PYTHON_BIN"
+
+if [ ! -d "$VENV_DIR" ]; then
+  "$PYTHON_BIN" -m venv "$VENV_DIR"
+fi
+
+VENV_PYTHON="$VENV_DIR/bin/python"
+if [ ! -x "$VENV_PYTHON" ]; then
+  echo "$VENV_DIR exists but $VENV_PYTHON is missing. Remove $VENV_DIR and rerun ./bin/install."
+  exit 1
+fi
+
+require_python_311 "$VENV_PYTHON" "$VENV_PYTHON" ". Remove $VENV_DIR and rerun ./bin/install."
+
+"$VENV_PYTHON" -m pip install -e ".[dev]"

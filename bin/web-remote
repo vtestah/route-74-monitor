@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+SERVER="${ROUTE74_SERVER:-root@194.226.20.40}"
+SSH_KEY="${ROUTE74_SSH_KEY:-$HOME/.ssh/id_rsa}"
+LOCAL_PORT="${ROUTE74_WEB_LOCAL_PORT:-8074}"
+REMOTE_HOST="${ROUTE74_WEB_REMOTE_HOST:-127.0.0.1}"
+REMOTE_PORT="${ROUTE74_WEB_REMOTE_PORT:-8074}"
+
+usage() {
+  cat <<'EOF'
+Открыть текущее web-приложение Route74 через SSH-туннель.
+
+Команды:
+  ./bin/web-remote         открыть server-side route74-web через SSH-туннель
+  ./bin/web-remote --help  показать справку
+
+Переменные:
+  ROUTE74_SERVER=root@194.226.20.40
+  ROUTE74_WEB_LOCAL_PORT=8074
+  ROUTE74_WEB_REMOTE_PORT=8074
+  ROUTE74_SSH_KEY=$HOME/.ssh/id_rsa
+EOF
+}
+
+require_port() {
+  local name="$1"
+  local value="$2"
+  if [[ ! "$value" =~ ^[0-9]+$ ]] || (( ${#value} > 5 )) || (( 10#$value < 1 || 10#$value > 65535 )); then
+    echo "$name must be an integer from 1 to 65535"
+    exit 2
+  fi
+}
+
+case "${1:-}" in
+  -h|--help)
+    usage
+    ;;
+  "")
+    require_port "ROUTE74_WEB_LOCAL_PORT" "$LOCAL_PORT"
+    require_port "ROUTE74_WEB_REMOTE_PORT" "$REMOTE_PORT"
+    echo "Открой: http://127.0.0.1:${LOCAL_PORT}"
+    echo "Туннель работает, пока открыто это окно. Ctrl+C - закрыть."
+    exec ssh \
+      -i "$SSH_KEY" \
+      -o IdentitiesOnly=yes \
+      -o StrictHostKeyChecking=accept-new \
+      -N \
+      -L "${LOCAL_PORT}:${REMOTE_HOST}:${REMOTE_PORT}" \
+      "$SERVER"
+    ;;
+  *)
+    echo "Неизвестный аргумент: $1"
+    usage
+    exit 2
+    ;;
+esac

@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from math import isfinite
+from route74.domain.traffic import RouteTrafficSnapshot  # noqa: F401
 
 
 @dataclass(frozen=True)

@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_dir="$(cd "$(dirname "$0")/.." && pwd)"
+target_dir="${HOME}/.local/bin"
+web_target="${target_dir}/route74-web-open"
+dashboard_target="${target_dir}/route74-dashboard-open"
+web_command="$(printf "%q" "${repo_dir}/bin/web")"
+dashboard_command="$(printf "%q" "${repo_dir}/bin/dashboard")"
+
+mkdir -p "$target_dir"
+
+cat > "$web_target" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+
+exec $web_command "\$@"
+EOF
+
+cat > "$dashboard_target" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+
+exec $dashboard_command "\$@"
+EOF
+
+chmod +x "$web_target" "$dashboard_target"
+
+echo "Installed: $web_target"
+echo "Installed: $dashboard_target"
+echo "Runs: $repo_dir/bin/web"
+echo "Dashboard: $repo_dir/bin/dashboard"
+
+case ":$PATH:" in
+  *":$target_dir:"*) ;;
+  *)
+    echo
+    echo "Warning: $target_dir is not in PATH."
+    echo "Add it to PATH or run: $web_target"
+    ;;
+esac
