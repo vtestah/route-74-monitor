@@ -1,0 +1,934 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d7c66">
+  <title>Поймать 74</title>
+  <style>
+    :root {
+      --bg: #f2eee7;
+      --panel: rgba(255, 252, 246, 0.94);
+      --ink: #1f1c17;
+      --muted: #645c52;
+      --line: rgba(66, 50, 33, 0.14);
+      --accent: #0d7c66;
+      --accent-dark: #145f54;
+      --accent-2: #c65d2e;
+      --danger: #a32020;
+      --warning: #9b5b12;
+      --shadow: 0 20px 48px rgba(64, 42, 21, 0.12);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(13, 124, 102, 0.14), transparent 24rem),
+        radial-gradient(circle at top right, rgba(198, 93, 46, 0.14), transparent 28rem),
+        linear-gradient(180deg, #fbf7f0 0%, var(--bg) 100%);
+    }
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 24px 18px 48px;
+    }
+    .hero, .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+    .hero {
+      padding: 28px;
+      margin-bottom: 18px;
+      display: grid;
+      gap: 16px;
+    }
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(2.4rem, 6vw, 4.5rem);
+      line-height: 0.95;
+      letter-spacing: -0.05em;
+    }
+    .lede {
+      max-width: 42rem;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.5;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .hero-actions {
+      align-items: center;
+    }
+    .hero-link {
+      color: var(--accent-dark);
+      font-size: 14px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+    .hero-link:hover { text-decoration: underline; }
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 14px 20px;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .16s ease, opacity .16s ease, box-shadow .16s ease;
+      box-shadow: 0 10px 24px rgba(31, 28, 23, 0.12);
+    }
+    button:hover { transform: translateY(-1px); }
+    button:focus-visible, input:focus-visible, summary:focus-visible {
+      outline: 3px solid rgba(13, 124, 102, .35);
+      outline-offset: 3px;
+    }
+    button:disabled { opacity: .6; cursor: wait; transform: none; }
+    .primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      color: #fff;
+      min-width: 190px;
+    }
+    .secondary { background: #fff7ec; color: var(--ink); }
+    .danger { background: #fff1ef; color: var(--danger); }
+    .status-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin: 0 0 18px;
+    }
+    .status-card {
+      min-width: 0;
+      padding: 13px 14px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255,255,255,.74);
+      box-shadow: 0 10px 26px rgba(64, 42, 21, 0.08);
+    }
+    .status-card[data-tone="good"] {
+      border-color: rgba(13, 124, 102, .26);
+      background: rgba(234, 249, 244, .88);
+    }
+    .status-card[data-tone="warn"] {
+      border-color: rgba(155, 91, 18, .28);
+      background: rgba(255, 248, 232, .9);
+    }
+    .status-card[data-tone="bad"] {
+      border-color: rgba(163, 32, 32, .28);
+      background: rgba(255, 241, 239, .9);
+    }
+    .status-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .status-value {
+      margin-top: 6px;
+      overflow: hidden;
+      color: var(--ink);
+      font-size: 15px;
+      font-weight: 850;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .status-detail {
+      margin-top: 4px;
+      overflow: hidden;
+      color: var(--muted);
+      font-size: 12px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr);
+      gap: 18px;
+      align-items: start;
+    }
+    .panel {
+      padding: 22px;
+      display: grid;
+      gap: 16px;
+    }
+    h2 {
+      margin: 0;
+      font-size: 22px;
+    }
+    .result-heading {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      background: rgba(255,255,255,.76);
+      font-size: 13px;
+    }
+    .status-ok { color: var(--accent); }
+    .status-bad { color: var(--danger); }
+    .result-state {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 20px;
+      background: rgba(255,255,255,.7);
+    }
+    .result-state[aria-busy="true"] {
+      opacity: .82;
+    }
+    .result-state[data-status="catch"] { border-color: rgba(13, 124, 102, .34); }
+    .result-state[data-status="wait"] { border-color: rgba(155, 91, 18, .34); }
+    .result-state[data-status="missed"] { border-color: rgba(163, 32, 32, .34); }
+    .result-state[data-status="no_eta"] { border-color: rgba(100, 92, 82, .34); }
+    .result-state[data-eta-state="live"] { background: rgba(234, 249, 244, .85); }
+    .result-state[data-eta-state="stale"] { background: rgba(255, 248, 232, .85); }
+    .result-state[data-eta-state="history"] { background: rgba(236, 242, 255, .85); }
+    .result-state[data-eta-state="no_eta"] { background: rgba(245, 242, 236, .85); }
+    .result-action {
+      margin: 0;
+      font-size: clamp(1.55rem, 4vw, 2.6rem);
+      line-height: 1.05;
+      letter-spacing: -0.035em;
+    }
+    .result-priority {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .result-status {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      margin-top: 10px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.8);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+    .result-state[data-eta-state="live"] .result-status {
+      color: var(--accent-dark);
+      background: rgba(13, 124, 102, .11);
+      border-color: rgba(13, 124, 102, .2);
+    }
+    .result-state[data-eta-state="stale"] .result-status {
+      color: var(--warning);
+      background: rgba(155, 91, 18, .11);
+      border-color: rgba(155, 91, 18, .2);
+    }
+    .result-state[data-eta-state="history"] .result-status {
+      color: #3656a7;
+      background: rgba(54, 86, 167, .1);
+      border-color: rgba(54, 86, 167, .18);
+    }
+    .result-state[data-eta-state="no_eta"] .result-status {
+      color: var(--muted);
+      background: rgba(100, 92, 82, .08);
+      border-color: rgba(100, 92, 82, .16);
+    }
+    .result-context {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .result-explanation {
+      margin-top: 8px;
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .result-metrics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .metric-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: rgba(255,255,255,.72);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 760;
+    }
+    .decision-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .decision-card {
+      min-height: 110px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255,255,255,.66);
+    }
+    .decision-card.wide { grid-column: 1 / -1; min-height: auto; }
+    .decision-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .decision-value {
+      margin-top: 8px;
+      font-size: clamp(1.35rem, 3vw, 2rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+    .decision-value.compact { font-size: 18px; line-height: 1.25; }
+    .alert {
+      display: none;
+      border-radius: 16px;
+      padding: 13px 15px;
+      border: 1px solid rgba(163, 32, 32, .28);
+      background: #fff1ef;
+      color: var(--danger);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .alert.visible { display: block; }
+    .loading {
+      display: none;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .loading.visible { display: block; }
+    details {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255,255,255,.5);
+      overflow: hidden;
+    }
+    summary {
+      padding: 15px 17px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    details[open] summary { border-bottom: 1px solid var(--line); }
+    pre {
+      margin: 0;
+      padding: 18px;
+      background: #1c1d1f;
+      color: #f8f7f4;
+      overflow: auto;
+      font: 14px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    label {
+      display: grid;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    input[type="number"] {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.78);
+      padding: 12px 14px;
+      font: inherit;
+      color: var(--ink);
+    }
+    .stack, .watch-list { display: grid; gap: 12px; }
+    .watch-item {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+      background: rgba(255,255,255,.66);
+      line-height: 1.45;
+    }
+    .watch-title { font-weight: 800; }
+    .watch-detail { margin-top: 5px; color: var(--muted); font-size: 14px; }
+    .subtle {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .walk-memory {
+      border: 1px dashed var(--line);
+      border-radius: 16px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,.48);
+    }
+    .diagnostic-body { padding: 16px; display: grid; gap: 12px; }
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+    .tabs button.active {
+      background: linear-gradient(135deg, var(--accent-2), #a9441d);
+      color: #fff;
+    }
+    .mobile-catch { display: none; }
+    .mobile-catch-note { display: none; }
+    @media (max-width: 860px) {
+      main { padding: 12px 12px 104px; }
+      .hero, .panel { border-radius: 20px; }
+      .hero { padding: 22px; }
+      .status-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid { grid-template-columns: 1fr; }
+      .mobile-catch {
+        display: block;
+        position: fixed;
+        z-index: 10;
+        left: 12px;
+        right: 12px;
+        bottom: max(12px, env(safe-area-inset-bottom));
+        width: calc(100% - 24px);
+        min-height: 58px;
+        box-shadow: 0 18px 40px rgba(20, 95, 84, .32);
+      }
+      .mobile-catch-note {
+        display: block;
+        position: fixed;
+        z-index: 11;
+        left: 28px;
+        right: 28px;
+        bottom: calc(max(12px, env(safe-area-inset-bottom)) + 5px);
+        color: rgba(255,255,255,.82);
+        font-size: 11px;
+        font-weight: 700;
+        pointer-events: none;
+        text-align: center;
+      }
+    }
+    @media (max-width: 760px) {
+      .panel { padding: 18px; }
+      .result-action { font-size: clamp(1.4rem, 7vw, 2.2rem); }
+      .result-state { padding: 16px; }
+      .decision-grid { grid-template-columns: 1fr; }
+      .decision-card { min-height: auto; }
+      .decision-card.wide { grid-column: auto; }
+      .result-heading { align-items: flex-start; flex-direction: column; }
+      .hero .primary { width: 100%; }
+    }
+    @media (max-width: 520px) {
+      h1 { font-size: 2.7rem; }
+      .lede { font-size: 15px; }
+      .hero { padding: 18px; }
+      .panel { padding: 16px; }
+      .status-strip { grid-template-columns: 1fr; }
+      .result-status { font-size: 12px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      button { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <div class="eyebrow">Маршрут 74 · Новосибирск</div>
+      <h1>Поймать 74</h1>
+      <div class="lede">Один расчёт: когда выходить, когда будет 74-й и сколько ждать у остановки. Профиль выбирается автоматически по времени Новосибирска.</div>
+      <div class="actions hero-actions">
+        <button id="catch-auto" class="primary" data-default-label="🎯 Поймать 74">🎯 Поймать 74</button>
+        <button id="catch-morning" class="secondary">Утро</button>
+        <button id="catch-evening" class="secondary">Вечер</button>
+        <a class="hero-link" href="/dashboard">Дашборд</a>
+      </div>
+    </section>
+
+    <section id="status-strip" class="status-strip" aria-label="Статус приложения" aria-live="polite">
+      <div id="backend-status" class="status-card" data-tone="warn">
+        <div class="status-label">Backend</div>
+        <div class="status-value">Проверяю</div>
+        <div class="status-detail">/healthz</div>
+      </div>
+      <div id="push-status" class="status-card" data-tone="warn">
+        <div class="status-label">Push</div>
+        <div class="status-value">Проверяю</div>
+        <div class="status-detail">Pushover</div>
+      </div>
+      <div id="watch-status" class="status-card" data-tone="warn">
+        <div class="status-label">Watch</div>
+        <div class="status-value">Проверяю</div>
+        <div class="status-detail">наблюдение</div>
+      </div>
+      <div id="updated-status" class="status-card" data-tone="warn">
+        <div class="status-label">Обновлено</div>
+        <div class="status-value">—</div>
+        <div class="status-detail">локальное время</div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="panel">
+        <div class="result-heading">
+          <h2>Что делать сейчас</h2>
+          <div id="app-meta" class="meta" aria-live="polite"></div>
+        </div>
+        <div id="request-error" class="alert" role="alert"></div>
+        <div id="request-loading" class="loading" aria-live="polite">Собираю свежий прогноз...</div>
+        <section id="result-state" class="result-state" data-status="empty" aria-live="polite" aria-busy="false">
+          <h3 id="result-action" class="result-action">Нажми «Поймать 74»</h3>
+          <div id="result-priority" class="result-priority">Главное действие появится здесь.</div>
+          <div id="result-status" class="result-status">Жду расчёт</div>
+          <div id="result-context" class="result-context">Покажу главное решение и оставлю подробности ниже.</div>
+          <div id="result-explanation" class="result-explanation"></div>
+          <div class="result-metrics" aria-label="Ключевые времена">
+            <span id="leave-pill" class="metric-pill">Выйти —</span>
+            <span id="arrival-pill" class="metric-pill">74-й —</span>
+            <span id="wait-pill" class="metric-pill">Ждать —</span>
+          </div>
+        </section>
+        <div class="decision-grid">
+          <div class="decision-card">
+            <div class="decision-label">Выйти</div>
+            <div id="leave-value" class="decision-value">—</div>
+          </div>
+          <div class="decision-card">
+            <div class="decision-label">74-й</div>
+            <div id="arrival-value" class="decision-value">—</div>
+          </div>
+          <div class="decision-card">
+            <div class="decision-label">Ждать у остановки</div>
+            <div id="wait-value" class="decision-value">—</div>
+          </div>
+          <div class="decision-card">
+            <div class="decision-label">Источник</div>
+            <div id="source-value" class="decision-value compact">—</div>
+          </div>
+        </div>
+        <details>
+          <summary>Подробный расчёт</summary>
+          <pre id="decision-output">Расчёт ещё не запускался.</pre>
+        </details>
+        <details>
+          <summary>Диагностика</summary>
+          <div class="diagnostic-body">
+            <div class="tabs">
+              <button id="stats-morning" class="secondary">Статус утра</button>
+              <button id="stats-evening" class="secondary">Статус вечера</button>
+              <button id="support-morning" class="secondary">Разбор утра</button>
+              <button id="support-evening" class="secondary">Разбор вечера</button>
+            </div>
+            <pre id="diagnostic-output">Выбери отчёт.</pre>
+          </div>
+        </details>
+      </article>
+
+      <aside class="panel">
+        <h2>Запас на дорогу</h2>
+        <div class="stack">
+          <label>Утром
+            <input id="morning-walk" type="number" min="1" max="120" value="12" inputmode="numeric" aria-describedby="walk-note">
+          </label>
+          <label>Вечером
+            <input id="evening-walk" type="number" min="1" max="120" value="17" inputmode="numeric" aria-describedby="walk-note">
+          </label>
+        </div>
+        <div id="walk-note" class="subtle walk-memory">Буферы сохраняются только в этом браузере.</div>
+        <div id="notification-note" class="subtle">Проверяю статус push-уведомлений...</div>
+        <div>
+          <div class="result-heading">
+            <h2>Наблюдение</h2>
+            <button id="refresh-watch" class="secondary">Обновить</button>
+          </div>
+          <div id="watch-list" class="watch-list"></div>
+        </div>
+        <div class="actions">
+          <button id="stop-morning" class="danger">Остановить утро</button>
+          <button id="stop-evening" class="danger">Остановить вечер</button>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <button id="mobile-catch" class="primary mobile-catch" data-default-label="🎯 Поймать 74">🎯 Поймать 74</button>
+  <div id="mobile-catch-note" class="mobile-catch-note">Авто · буферы сохранены</div>
+
+  <script>
+    const output = document.getElementById("decision-output");
+    const diagnosticOutput = document.getElementById("diagnostic-output");
+    const meta = document.getElementById("app-meta");
+    const watchList = document.getElementById("watch-list");
+    const notificationNote = document.getElementById("notification-note");
+    const errorBox = document.getElementById("request-error");
+    const loading = document.getElementById("request-loading");
+    const resultState = document.getElementById("result-state");
+    const mobileCatchNote = document.getElementById("mobile-catch-note");
+    const buttons = Array.from(document.querySelectorAll("button"));
+    const walkInputs = {
+      morning: document.getElementById("morning-walk"),
+      evening: document.getElementById("evening-walk"),
+    };
+    const appState = { backendOk: null, pushReady: null, watchCount: 0 };
+    const walkStorageKeys = {
+      morning: "route74.morningWalkMinutes",
+      evening: "route74.eveningWalkMinutes",
+    };
+    const defaultWalks = { morning: 12, evening: 17 };
+
+    const statusCard = (id) => document.getElementById(id);
+
+    const setStatusCard = (id, value, detail, tone = "warn") => {
+      const card = statusCard(id);
+      card.dataset.tone = tone;
+      card.querySelector(".status-value").textContent = value;
+      card.querySelector(".status-detail").textContent = detail;
+    };
+
+    const normalizedWalk = (input, fallback) => {
+      const value = Number(input.value);
+      if (!Number.isFinite(value)) return fallback;
+      return Math.min(120, Math.max(1, Math.round(value)));
+    };
+
+    const saveWalkPreferences = () => {
+      try {
+        localStorage.setItem(walkStorageKeys.morning, String(normalizedWalk(walkInputs.morning, defaultWalks.morning)));
+        localStorage.setItem(walkStorageKeys.evening, String(normalizedWalk(walkInputs.evening, defaultWalks.evening)));
+      } catch (_error) {
+        return;
+      }
+    };
+
+    const loadWalkPreferences = () => {
+      try {
+        Object.entries(walkInputs).forEach(([key, input]) => {
+          const stored = Number(localStorage.getItem(walkStorageKeys[key]));
+          if (Number.isFinite(stored) && stored >= 1 && stored <= 120) {
+            input.value = String(Math.round(stored));
+          }
+        });
+      } catch (_error) {
+        return;
+      }
+    };
+
+    const applyNormalizedWalks = () => {
+      walkInputs.morning.value = String(normalizedWalk(walkInputs.morning, defaultWalks.morning));
+      walkInputs.evening.value = String(normalizedWalk(walkInputs.evening, defaultWalks.evening));
+      saveWalkPreferences();
+    };
+
+    const walkPayload = () => {
+      applyNormalizedWalks();
+      return {
+        morning_walk_minutes: Number(walkInputs.morning.value),
+        evening_walk_minutes: Number(walkInputs.evening.value),
+        start_watch: true,
+      };
+    };
+
+    const setBusy = (busy, calculating = false) => {
+      buttons.forEach((button) => { button.disabled = busy; });
+      document.body.classList.toggle("is-busy", busy);
+      resultState.setAttribute("aria-busy", busy && calculating ? "true" : "false");
+      document.querySelectorAll("[data-default-label]").forEach((button) => {
+        button.textContent = busy && calculating ? "Считаю..." : button.dataset.defaultLabel;
+      });
+      loading.classList.toggle("visible", busy && calculating);
+      mobileCatchNote.textContent = busy && calculating ? "Собираю прогноз..." : "Авто · буферы сохранены";
+    };
+
+    const showError = (message) => {
+      errorBox.textContent = message;
+      errorBox.classList.add("visible");
+      setStatusCard("updated-status", "ошибка", "проверь сообщение", "bad");
+    };
+
+    const clearError = () => {
+      errorBox.textContent = "";
+      errorBox.classList.remove("visible");
+    };
+
+    const fetchJson = async (url, options) => {
+      const response = await fetch(url, options);
+      let payload;
+      try {
+        payload = await response.json();
+      } catch (_error) {
+        throw new Error("Сервер вернул некорректный ответ.");
+      }
+      if (!response.ok) {
+        throw new Error(payload.detail || "Не удалось загрузить данные.");
+      }
+      return payload;
+    };
+
+    const updateMeta = () => {
+      const items = [];
+      if (appState.backendOk !== null) {
+        items.push({ label: appState.backendOk ? "Backend ok" : "Backend bad", ok: appState.backendOk });
+      }
+      if (appState.pushReady !== null) {
+        items.push({ label: appState.pushReady ? "Push готов" : "Push выключен", ok: appState.pushReady });
+      }
+      items.push({ label: `Наблюдений: ${appState.watchCount}`, ok: true });
+      meta.innerHTML = "";
+      items.forEach((item) => {
+        const chip = document.createElement("span");
+        chip.className = `chip ${item.ok ? "status-ok" : "status-bad"}`;
+        chip.textContent = item.label;
+        meta.appendChild(chip);
+      });
+    };
+
+    const profileLabel = (profileKey) => profileKey === "morning" ? "Утро" : "Вечер";
+
+    const timeValue = (isoValue) => {
+      if (!isoValue) return "—";
+      return new Intl.DateTimeFormat("ru-RU", {
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "Asia/Novosibirsk",
+      }).format(new Date(isoValue));
+    };
+
+    const minutesValue = (minutes, empty = "—") => {
+      if (minutes === null || minutes === undefined) return empty;
+      if (minutes <= 0) return "сейчас";
+      return `через ${minutes} мин`;
+    };
+
+    const localTimeValue = () => new Intl.DateTimeFormat("ru-RU", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      timeZone: "Asia/Novosibirsk",
+    }).format(new Date());
+
+    const markUpdated = (detail = "данные свежие") => {
+      setStatusCard("updated-status", localTimeValue(), detail, "good");
+    };
+
+    const actionHint = (decision) => {
+      if (decision.status === "no_eta") return "Точного времени нет — обнови через минуту или открой карту.";
+      if (decision.status === "missed") return "Этот рейс уже не цель — жди следующий сигнал.";
+      if (decision.leave_in_minutes <= 0) return "Главное: выходить сейчас.";
+      return `Главное: есть ${decision.leave_in_minutes} мин до выхода.`;
+    };
+
+    const renderDecision = (decision) => {
+      resultState.dataset.status = decision.status;
+      resultState.dataset.etaState = decision.eta_state;
+      document.getElementById("result-action").textContent = decision.headline;
+      document.getElementById("result-priority").textContent = actionHint(decision);
+      document.getElementById("result-status").textContent = decision.eta_state_label;
+      document.getElementById("result-context").textContent =
+        `${decision.profile_label} · ${decision.eta_state_label} · расчёт на ${timeValue(decision.current_time)}`;
+      document.getElementById("result-explanation").textContent =
+        [decision.eta_explanation_label, decision.eta_action_label].filter(Boolean).join(" · ");
+
+      if (decision.status === "no_eta") {
+        document.getElementById("leave-value").textContent = "не считаю";
+        document.getElementById("arrival-value").textContent = "нет ETA";
+        document.getElementById("wait-value").textContent = "неизвестно";
+      } else if (decision.status === "missed") {
+        document.getElementById("leave-value").textContent = "этот уже ушёл";
+        document.getElementById("arrival-value").textContent = timeValue(decision.arrival_at);
+        document.getElementById("wait-value").textContent = "выбери следующий";
+      } else {
+        document.getElementById("leave-value").textContent =
+          decision.leave_in_minutes <= 0 ? "сейчас" : timeValue(decision.leave_at);
+        document.getElementById("arrival-value").textContent =
+          `${timeValue(decision.arrival_at)} · ${minutesValue(decision.arrival_in_minutes)}`;
+        document.getElementById("wait-value").textContent =
+          decision.wait_minutes === null ? "неизвестно" : `~${decision.wait_minutes} мин`;
+      }
+      document.getElementById("source-value").textContent = decision.source_label;
+      document.getElementById("leave-pill").textContent = `Выйти ${minutesValue(decision.leave_in_minutes)}`;
+      document.getElementById("arrival-pill").textContent = decision.arrival_at
+        ? `74-й ${timeValue(decision.arrival_at)}`
+        : "74-й нет ETA";
+      document.getElementById("wait-pill").textContent = decision.wait_minutes === null
+        ? "Ждать неизвестно"
+        : `Ждать ~${decision.wait_minutes} мин`;
+    };
+
+    const renderWatch = (watch) => {
+      const item = document.createElement("div");
+      item.className = "watch-item";
+      const title = document.createElement("div");
+      title.className = "watch-title";
+      title.textContent = `${profileLabel(watch.profile_key)} · запас ${watch.walk_minutes} мин`;
+      const detail = document.createElement("div");
+      detail.className = "watch-detail";
+      const early = watch.early_sent ? "ранний сигнал отправлен" : "ранний сигнал ещё не отправлен";
+      const errors = watch.error_count ? ` · ошибок: ${watch.error_count} (${watch.last_error_type || "unknown"})` : "";
+      detail.textContent = `${early} · автостоп через ~${watch.expires_in_minutes} мин${errors}`;
+      item.append(title, detail);
+      return item;
+    };
+
+    const refreshHealth = async () => {
+      try {
+        const payload = await fetchJson("/healthz");
+        const ok = payload.status === "ok";
+        appState.backendOk = ok;
+        setStatusCard(
+          "backend-status",
+          ok ? "готов" : "ошибка",
+          payload.version?.package_version ? `v${payload.version.package_version}` : "healthz",
+          ok ? "good" : "bad",
+        );
+      } catch (error) {
+        appState.backendOk = false;
+        setStatusCard("backend-status", "недоступен", error instanceof Error ? error.message : "healthz", "bad");
+      }
+      updateMeta();
+    };
+
+    const refreshWatches = async () => {
+      const payload = await fetchJson("/api/watch");
+      watchList.innerHTML = "";
+      if (!payload.watches.length) {
+        watchList.innerHTML = '<div class="watch-item subtle">Активного наблюдения сейчас нет.</div>';
+      } else {
+        payload.watches.forEach((watch) => watchList.appendChild(renderWatch(watch)));
+      }
+      const pushReady = payload.notification.configured;
+      appState.pushReady = pushReady;
+      appState.watchCount = payload.watches.length;
+      notificationNote.textContent = pushReady
+        ? "Push готов: после расчёта включится наблюдение и придут отдельные сигналы."
+        : "Push не настроен: расчёт работает, но watch-уведомления не стартуют.";
+      setStatusCard(
+        "push-status",
+        pushReady ? "готов" : "выключен",
+        payload.notification.detail || "Pushover",
+        pushReady ? "good" : "warn",
+      );
+      setStatusCard(
+        "watch-status",
+        payload.watches.length ? `${payload.watches.length} активно` : "нет активных",
+        payload.watches.length ? "сигналы включены" : "после расчёта до 30 мин",
+        payload.watches.length ? "good" : "warn",
+      );
+      updateMeta();
+      markUpdated("watch обновлён");
+      return payload;
+    };
+
+    const refreshStatus = async () => {
+      const results = await Promise.allSettled([refreshHealth(), refreshWatches()]);
+      const failed = results.find((result) => result.status === "rejected");
+      if (failed) {
+        const reason = failed.reason;
+        showError(reason instanceof Error ? reason.message : "Не удалось загрузить статус.");
+      }
+    };
+
+    const runCatch = async (profile) => {
+      setBusy(true, true);
+      clearError();
+      try {
+        const payload = await fetchJson("/api/catch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ profile, ...walkPayload() }),
+        });
+        renderDecision(payload.decision_ui);
+        output.textContent = payload.message;
+        await refreshWatches();
+      } catch (error) {
+        showError(error instanceof Error ? error.message : "Не удалось собрать прогноз.");
+      } finally {
+        setBusy(false, true);
+      }
+    };
+
+    const showText = async (url, button) => {
+      setBusy(true);
+      clearError();
+      document.querySelectorAll(".tabs button").forEach((node) => node.classList.remove("active"));
+      button.classList.add("active");
+      try {
+        const payload = await fetchJson(url);
+        diagnosticOutput.textContent = payload.message;
+        markUpdated("диагностика");
+      } catch (error) {
+        showError(error instanceof Error ? error.message : "Не удалось загрузить диагностику.");
+      } finally {
+        setBusy(false);
+      }
+    };
+
+    const stopWatch = async (profileKey) => {
+      setBusy(true);
+      clearError();
+      try {
+        await fetchJson("/api/watch/stop", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ profile_key: profileKey }),
+        });
+        await refreshWatches();
+      } catch (error) {
+        showError(error instanceof Error ? error.message : "Не удалось остановить наблюдение.");
+      } finally {
+        setBusy(false);
+      }
+    };
+
+    document.getElementById("catch-auto").onclick = () => runCatch("auto");
+    document.getElementById("mobile-catch").onclick = () => runCatch("auto");
+    document.getElementById("catch-morning").onclick = () => runCatch("morning");
+    document.getElementById("catch-evening").onclick = () => runCatch("evening");
+    document.getElementById("refresh-watch").onclick = async () => {
+      setBusy(true);
+      clearError();
+      try { await refreshStatus(); }
+      catch (error) { showError(error instanceof Error ? error.message : "Не удалось обновить наблюдение."); }
+      finally { setBusy(false); }
+    };
+    document.getElementById("stop-morning").onclick = () => stopWatch("morning");
+    document.getElementById("stop-evening").onclick = () => stopWatch("evening");
+    document.getElementById("stats-morning").onclick = function () {
+      showText("/api/stats/morning?walk_minutes=" + encodeURIComponent(normalizedWalk(walkInputs.morning, defaultWalks.morning)), this);
+    };
+    document.getElementById("stats-evening").onclick = function () {
+      showText("/api/stats/evening?walk_minutes=" + encodeURIComponent(normalizedWalk(walkInputs.evening, defaultWalks.evening)), this);
+    };
+    document.getElementById("support-morning").onclick = function () { showText("/api/support/morning", this); };
+    document.getElementById("support-evening").onclick = function () { showText("/api/support/evening", this); };
+    Object.values(walkInputs).forEach((input) => {
+      input.addEventListener("change", applyNormalizedWalks);
+      input.addEventListener("input", saveWalkPreferences);
+    });
+
+    loadWalkPreferences();
+    applyNormalizedWalks();
+    refreshStatus().catch((error) => showError(error instanceof Error ? error.message : "Не удалось загрузить статус."));
+  </script>
+</body>
+</html>
