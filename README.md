@@ -5,24 +5,25 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 
-Личное web-приложение для маршрутки 74 в Новосибирске. Основной сценарий в
-браузере: `🎯 Поймать 74`. Приложение берёт live ETA из Яндекс.Карт, при
-необходимости использует локальную историю Яндекса и, если данных нет, честно
-показывает `no ETA`. Ранние и финальные сигналы могут приходить через
-Pushover, но отсутствие настройки Pushover не ломает runtime.
+A personal web app that answers one question: when do I leave to catch minibus
+route 74 in Novosibirsk? The main flow is a single browser button,
+`🎯 Поймать 74` ("Catch the 74"). It reads a live ETA from Yandex Maps, falls
+back to local Yandex history when needed, and shows `no ETA` honestly when there
+is no signal. Early and final alerts can go out over Pushover, and the runtime
+works fine without it.
 
-## Коротко
+## At a glance
 
 - Runtime: Python 3.11+, FastAPI, SQLite.
 - Source order: Yandex live -> Yandex history -> no ETA.
-- Основной UX: одна кнопка `🎯 Поймать 74` в браузере.
-- Безопасные буферы: утром `12` минут, вечером `17` минут.
-- Live-источник: только `src/route74/sources/yandex/`.
-- Pushover опционален: `PUSHOVER_APP_TOKEN`, `PUSHOVER_USER_KEY`.
-- Данные: `data/route74.sqlite`, `data/web_watches.json`.
-- Секреты: только `.env`, не в git.
+- One-button UX: `🎯 Поймать 74` in the browser.
+- Safety buffers: 12 minutes in the morning, 17 in the evening.
+- The live source lives only in `src/route74/sources/yandex/`.
+- Pushover is optional: `PUSHOVER_APP_TOKEN`, `PUSHOVER_USER_KEY`.
+- Data: `data/route74.sqlite`, `data/web_watches.json`.
+- Secrets stay in `.env` and never in git.
 
-## Быстрый Старт
+## Quick start
 
 ```bash
 git clone https://github.com/vtestah/route-74-monitor
@@ -30,91 +31,90 @@ cd route-74-monitor
 ./bin/onboard
 ```
 
-Открыть `.env`, при желании добавить Pushover-ключи, затем запустить:
+Open `.env`, add Pushover keys if you want them, then run:
 
 ```bash
 route74-web
 ```
 
-Если launcher не установлен:
+If the launcher is not installed:
 
 ```bash
 ./bin/web
 ```
 
-Локальный smoke web-runtime:
+Local web-runtime smoke:
 
 ```bash
 ./bin/smoke-web-local
 ```
 
-Операторский dashboard со статистикой по сбору:
+Operator dashboard with collection stats:
 
 ```bash
 ./bin/dashboard
 ```
 
-CLI для быстрого предпросмотра:
+Quick CLI preview:
 
 ```bash
 .venv/bin/route74 commute morning
 .venv/bin/route74 commute evening
 ```
 
-## Пользовательский Сценарий
+## User flow
 
-- Главный экран показывает кнопку `🎯 Поймать 74`.
-- Над кнопкой/результатом есть короткая статус-лента: backend, Push,
-  активные watch и время последнего обновления.
-- Приложение само выбирает `morning` или `evening` по времени Новосибирска.
-- Ответ остаётся catch-first: что делать сейчас, когда выйти, когда будет 74-й
-  и сколько ждать у остановки.
-- Источник, надёжность и статус Яндекса идут ниже действия.
-- Настроенные в браузере утренний и вечерний буферы сохраняются локально в
-  `localStorage`; в git и на сервер они не попадают.
-- Решение ETA объясняется отдельными reason/action полями: почему выбран live,
-  история, координата, поправка, запас риска или `no ETA`.
-- Missed-сценарий обращается на `ты`: “на этот 74-й уже не успеешь”.
-- После запроса создаётся watch на ограниченное время.
-- Ранние сигналы и финальный `ВЫХОДИ СЕЙЧАС` уходят одиночными
-  Pushover-уведомлениями, если notifier настроен.
-- Если Pushover не настроен, watch и web UI продолжают работать без падения.
+- The main screen shows the `🎯 Поймать 74` button.
+- A short status strip above the result covers backend, Push, active watches,
+  and the last update time.
+- The app picks `morning` or `evening` automatically from Novosibirsk time.
+- The answer stays catch-first: what to do now, when to leave, when the 74
+  arrives, and how long to wait at the stop.
+- Source, reliability, and Yandex status sit below the action, not above it.
+- Morning and evening buffers set in the browser live in `localStorage` only;
+  they never reach git or the server.
+- The ETA decision is explained through separate reason/action fields: why live,
+  history, vehicle coordinate, correction, risk buffer, or `no ETA` was chosen.
+- The missed case is blunt on purpose: it tells you that you will not make this 74.
+- Each request opens a watch for a limited time.
+- Early signals and the final "leave now" go out as single Pushover messages
+  when the notifier is configured.
+- Without Pushover, the watches and the web UI keep working.
 
-Профили:
+Two profiles, chosen by local time:
 
-| Профиль | Окно | Посадка | Цель | Буфер |
-| --- | --- | --- | --- | --- |
-| `morning` | `06:00-10:59` | Медицинский центр | Цветной проезд | `12` минут |
-| `evening` | `17:00-22:59` | ВЦ | Ул. Твардовского | `17` минут |
+| Profile | Window | Buffer |
+| --- | --- | --- |
+| `morning` | `06:00-10:59` | 12 min |
+| `evening` | `17:00-22:59` | 17 min |
 
-## Архитектура
+## Architecture
 
-- `src/route74/domain/` — данные и правила предметной области.
-- `src/route74/services/` — сбор snapshot и decision.
-- `src/route74/presenters/` — человекочитаемый текст.
-- `src/route74/web/` — FastAPI app, HTML UI, watch runtime.
-- `src/route74/notifications/` — notifier interface и Pushover adapter.
-- `src/route74/storage/` — SQLite schema, health, reporting.
-- `src/route74/sources/yandex/` — live/history integration.
-- `src/route74/cli/` — диагностические команды и smoke-friendly preview.
+- `src/route74/domain/` holds domain data and rules.
+- `src/route74/services/` does snapshot collection and the decision.
+- `src/route74/presenters/` turns that into human-readable text.
+- `src/route74/web/` is the FastAPI app, HTML UI, and watch runtime.
+- `src/route74/notifications/` is the notifier interface plus the Pushover adapter.
+- `src/route74/storage/` is the SQLite schema, health, and reporting.
+- `src/route74/sources/yandex/` is the live and history integration.
+- `src/route74/cli/` holds diagnostic commands and a smoke-friendly preview.
 
-Краткая карта слоёв: [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ## Pushover
 
-Минимальная настройка:
+Minimal setup:
 
 ```text
 PUSHOVER_APP_TOKEN=
 PUSHOVER_USER_KEY=
 ```
 
-Если один из ключей отсутствует, используется no-op notifier. Web app не
-падает и просто не отправляет push-уведомления.
+If either key is missing, a no-op notifier is used. The web app does not crash,
+it just skips push notifications.
 
-## Web Конфиг
+## Web config
 
-Основные переменные:
+Main variables:
 
 ```text
 ROUTE74_WEB_HOST=127.0.0.1
@@ -124,26 +124,25 @@ ROUTE74_WEB_WATCH_STATE_PATH=data/web_watches.json
 ROUTE74_DB_PATH=data/route74.sqlite
 ```
 
-Для non-loopback bind нужно явно включить:
+A non-loopback bind has to be turned on explicitly:
 
 ```text
 ROUTE74_WEB_ALLOW_PUBLIC=1
 ```
 
-Самый простой внешний доступ без домена и reverse proxy:
+The simplest external access without a domain or reverse proxy:
 
 ```text
 ROUTE74_WEB_HOST=0.0.0.0
 ROUTE74_WEB_ALLOW_PUBLIC=1
 ```
 
-После этого web app открывается по адресу `http://<server-ip>:8074/`.
-Это обычный HTTP без TLS и без защиты, поэтому подходит только для
-закрытого личного использования.
+The web app is then served at `http://<server-ip>:8074/`. This is plain HTTP
+with no TLS and no auth, so it only fits closed personal use.
 
 ## CLI
 
-Полезные команды:
+Handy commands:
 
 ```bash
 route74 commute morning
@@ -166,34 +165,34 @@ route74 version
 route74 explain
 ```
 
-`commute` и `predict` печатают тот же пользовательский сценарий без web UI.
+`commute` and `predict` print the same user flow without the web UI.
 
-## ETA Решение
+## ETA decision
 
-Алгоритм сохраняет порядок `Yandex live -> Yandex history -> no ETA`, но рядом
-с выбранным ETA отдаёт машинно-читаемое объяснение:
+The algorithm keeps the `Yandex live -> Yandex history -> no ETA` order, and
+ships a machine-readable explanation next to the chosen ETA:
 
-- `live_eta` — прямой live ETA прошёл проверку;
-- `corrected_live` — live ETA сдвинут по прошлым ошибкам;
-- `vehicle_progress` — прогноз по координате машины, с дополнительным запасом;
-- `history_fallback` — live ETA нет или он слабый, используется история;
-- `risk_buffer` — добавлен запас из-за прошлых промахов источника;
-- `weak_live_ignored` — live/координатный сигнал был слабым и не выбран;
-- `storage_guardrail` — прошлые поправки недоступны, решение без них;
-- `no_eta` — точного ETA нет.
+- `live_eta`: a direct live ETA passed validation;
+- `corrected_live`: live ETA shifted by past errors;
+- `vehicle_progress`: forecast from the vehicle coordinate, with an extra margin;
+- `history_fallback`: live ETA is missing or weak, so history is used;
+- `risk_buffer`: extra margin added after past source misses;
+- `weak_live_ignored`: the live or coordinate signal was weak and not chosen;
+- `storage_guardrail`: past corrections are unavailable, decision made without them;
+- `no_eta`: there is no accurate ETA.
 
-Русский текст для этих причин формируется в `presenters/`; `domain/` хранит
-только стабильные коды.
+The Russian wording for these reasons is built in `presenters/`; `domain/` keeps
+only the stable codes.
 
-## Проверки
+## Checks
 
-Базовая:
+Base:
 
 ```bash
 ./bin/check
 ```
 
-Профильные:
+Focused:
 
 ```bash
 ./bin/smoke-web-local
@@ -201,19 +200,19 @@ route74 explain
 ./bin/package-smoke
 ```
 
-## Документация
+## Docs
 
-- [docs/README.md](./docs/README.md) — индекс.
-- [docs/QUALITY.md](./docs/QUALITY.md) — проверки.
-- [docs/SECURITY.md](./docs/SECURITY.md) — `.env`, секреты, deploy hygiene.
-- [docs/RUNBOOK.md](./docs/RUNBOOK.md) — диагностика.
-- [docs/SERVER_DEPLOY.md](./docs/SERVER_DEPLOY.md) — серверный запуск.
-- [docs/REPORTING.md](./docs/REPORTING.md) — forecast/reporting слой.
-- [docs/DECISIONS.md](./docs/DECISIONS.md) — зафиксированные решения.
+- [docs/README.md](./docs/README.md): index.
+- [docs/QUALITY.md](./docs/QUALITY.md): checks.
+- [docs/SECURITY.md](./docs/SECURITY.md): `.env`, secrets, deploy hygiene.
+- [docs/RUNBOOK.md](./docs/RUNBOOK.md): diagnostics.
+- [docs/SERVER_DEPLOY.md](./docs/SERVER_DEPLOY.md): server run.
+- [docs/REPORTING.md](./docs/REPORTING.md): forecast and reporting layer.
+- [docs/DECISIONS.md](./docs/DECISIONS.md): recorded decisions.
 
-## Инварианты
+## Invariants
 
-- Не возвращать official/gortrans fallback без нового решения.
-- Не хранить `.env`, токены, user keys и реальные SQLite/JSON данные в git.
-- Не писать точные личные адреса, этажи и рабочие локации в docs или код.
-- Business-логика остаётся в `domain/services/presenters`, а не в web/notifier.
+- No official/gortrans fallback without a fresh decision.
+- No `.env`, tokens, user keys, or real SQLite/JSON data in git.
+- No exact personal addresses, floors, or work locations in docs or code.
+- Business logic stays in `domain/services/presenters`, not in web or notifier.
