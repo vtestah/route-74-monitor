@@ -188,10 +188,6 @@ run_package_smokes() {
 }
 
 check_step "check lock smoke" ./bin/check-lock-smoke
-check_step "agent harness" ./bin/validate-agent-harness
-check_step "ai-first audit" ./bin/ai-first-audit
-check_quiet_step "memory consolidate stats" ./bin/memory-consolidate --stats
-check_quiet_step "memory recall smoke" ./bin/memory-recall "route74 web app"
 
 if [ ! -x "$python_bin" ]; then
   echo "Missing .venv. Run ./bin/onboard first."

@@ -22,5 +22,3 @@ data/*.json
 data/*.lock
 .agtx/worktrees/
 .agtx/*.md
-.claude/skills/
-.agents/skills/.nimbalyst-generated/

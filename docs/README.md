@@ -17,14 +17,6 @@
 - [DASHBOARD.md](./DASHBOARD.md) — web UI и операторский обзор.
 - [REPORTING.md](./REPORTING.md) — forecast/reporting слой.
 
-## Агентный Контур
-
-- [../AGENTS.md](../AGENTS.md) — краткая карта.
-- [AI_FIRST.md](./AI_FIRST.md) — автономный workflow.
-- [AGENT_HARNESS.md](./AGENT_HARNESS.md) — структура harness.
-- [PLANS.md](./PLANS.md) — шаблон планов.
-- [TECH_DEBT.md](./TECH_DEBT.md) — наблюдаемый drift.
-
 ## Яндекс
 
 - [YANDEX_CONTRACT.md](./YANDEX_CONTRACT.md) — stop/thread contract.

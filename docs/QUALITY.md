@@ -8,7 +8,6 @@
 
 Что входит в базовый прогон:
 
-- agent-harness и AI-first audit;
 - shell syntax для `bin/*`;
 - `compileall` и cleanup bytecode;
 - smoke package-модули;
@@ -56,4 +55,3 @@ Commute слой:
 
 - Менял web/UI/notifier: `./bin/check`, `./bin/smoke-web-local`.
 - Менял Yandex integration: `./bin/check`, `./bin/smoke-yandex`.
-- Менял docs/rules/skills: `./bin/ai-first-audit`, затем `./bin/check`.
