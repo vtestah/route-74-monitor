@@ -1,4 +1,4 @@
-"""Factory for CommuteService — shared between web and CLI."""
+"""Factory for CommuteService, shared between web and CLI."""
 
 from __future__ import annotations
 
