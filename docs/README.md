@@ -5,6 +5,7 @@ Start with the root [README](../README.md), then open the section you need.
 ## Core
 
 - [../README.md](../README.md): running the web app, UX, Pushover.
+- [CLI.md](./CLI.md): full command reference and ETA reason codes.
 - [QUALITY.md](./QUALITY.md): checks and smoke commands.
 - [SECURITY.md](./SECURITY.md): `.env`, secrets, deploy hygiene.
 - [DECISIONS.md](./DECISIONS.md): recorded decisions.

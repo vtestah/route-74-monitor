@@ -33,55 +33,26 @@ cd route-74-monitor
 ./bin/onboard
 ```
 
-Open `.env`, add Pushover keys if you want them, then run:
+Open `.env`, add Pushover keys if you want them, then run `route74-web` (or
+`./bin/web` if the launcher is not installed). A CLI preview works without the
+web server: `.venv/bin/route74 commute morning`.
 
-```bash
-route74-web
-```
-
-If the launcher is not installed:
-
-```bash
-./bin/web
-```
-
-Local web-runtime smoke:
-
-```bash
-./bin/smoke-web-local
-```
-
-Operator dashboard with collection stats:
-
-```bash
-./bin/dashboard
-```
-
-Quick CLI preview:
-
-```bash
-.venv/bin/route74 commute morning
-.venv/bin/route74 commute evening
-```
+Other useful entry points: `./bin/smoke-web-local` for a local web-runtime
+smoke check, `./bin/dashboard` for the operator dashboard.
 
 ## User flow
 
-- The main screen shows the `🎯 Поймать 74` button.
-- A short status strip above the result covers backend, Push, active watches,
-  and the last update time.
+- The main screen shows the `🎯 Поймать 74` button; a status strip above it
+  covers backend, Push, active watches, and the last update time.
 - The app picks `morning` or `evening` automatically from Novosibirsk time.
 - The answer stays catch-first: what to do now, when to leave, when the 74
-  arrives, and how long to wait at the stop.
-- Source, reliability, and Yandex status sit below the action, not above it.
-- Morning and evening buffers set in the browser live in `localStorage` only;
-  they never reach git or the server.
-- The ETA decision is explained through separate reason/action fields: why live,
-  history, vehicle coordinate, correction, risk buffer, or `no ETA` was chosen.
-- The missed case is blunt on purpose: it tells you that you will not make this 74.
-- Each request opens a watch for a limited time.
-- Early signals and the final "leave now" go out as single Pushover messages
-  when the notifier is configured.
-- Without Pushover, the watches and the web UI keep working.
+  arrives, and how long to wait at the stop, with reliability and source
+  detail below the action, not above it. The missed case is blunt on purpose.
+- Each request opens a watch for a limited time; early and final "leave now"
+  signals go out as single Pushover messages when the notifier is configured.
+  Without Pushover, the watches and the web UI keep working.
+- Morning and evening buffers set in the browser live in `localStorage` only,
+  never in git or on the server.
 
 Two profiles, chosen by local time:
 
@@ -101,7 +72,6 @@ Two profiles, chosen by local time:
 - `src/route74/sources/yandex/` is the live and history integration.
 - `src/route74/cli/` holds diagnostic commands and a smoke-friendly preview.
 
-
 ## Pushover
 
 Minimal setup:
@@ -116,75 +86,39 @@ it just skips push notifications.
 
 ## Web config
 
-Main variables:
-
 ```text
-ROUTE74_WEB_HOST=127.0.0.1
+ROUTE74_WEB_HOST=127.0.0.1        # 0.0.0.0 to bind beyond loopback
 ROUTE74_WEB_PORT=8074
-ROUTE74_WEB_ALLOW_PUBLIC=0
+ROUTE74_WEB_ALLOW_PUBLIC=0        # must be 1 for a non-loopback host
 ROUTE74_WEB_WATCH_STATE_PATH=data/web_watches.json
 ROUTE74_DB_PATH=data/route74.sqlite
 ```
 
-A non-loopback bind has to be turned on explicitly:
-
-```text
-ROUTE74_WEB_ALLOW_PUBLIC=1
-```
-
-The simplest external access without a domain or reverse proxy:
-
-```text
-ROUTE74_WEB_HOST=0.0.0.0
-ROUTE74_WEB_ALLOW_PUBLIC=1
-```
-
-The web app is then served at `http://<server-ip>:8074/`. This is plain HTTP
-with no TLS and no auth, so it only fits closed personal use.
+The simplest external access without a domain or reverse proxy is
+`ROUTE74_WEB_HOST=0.0.0.0` with `ROUTE74_WEB_ALLOW_PUBLIC=1`, served at
+`http://<server-ip>:8074/`. That is plain HTTP with no TLS and no auth, so it
+only fits closed personal use.
 
 ## CLI
 
-Handy commands:
+`commute` and `predict` print the same user flow without the web UI:
 
 ```bash
 route74 commute morning
-route74 commute evening
-route74 predict morning
 route74 stats morning
-route74 support-report --profile morning
-route74 watch-state
 route74 forecast-health
-route74 yandex-stats --hours 24
-route74 runtime-latency --hours 24
-route74 runtime-events --hours 24 --limit 8
-route74 monitor-tick --fail-on warning
-route74 prediction-lab --window weekday_morning_09_12
-route74 prediction-evaluate --window weekday_morning_09_12
-route74 prediction-backfill --profile all
-route74 arrival-events --window weekday_morning_09_12
-route74 db-backup --help
-route74 version
-route74 explain
+route74 watch-state
 ```
 
-`commute` and `predict` print the same user flow without the web UI.
+Full command list, including the prediction lab and maintenance commands:
+[docs/CLI.md](./docs/CLI.md).
 
 ## ETA decision
 
-The algorithm keeps the `Yandex live -> Yandex history -> no ETA` order, and
-ships a machine-readable explanation next to the chosen ETA:
-
-- `live_eta`: a direct live ETA passed validation;
-- `corrected_live`: live ETA shifted by past errors;
-- `vehicle_progress`: forecast from the vehicle coordinate, with an extra margin;
-- `history_fallback`: live ETA is missing or weak, so history is used;
-- `risk_buffer`: extra margin added after past source misses;
-- `weak_live_ignored`: the live or coordinate signal was weak and not chosen;
-- `storage_guardrail`: past corrections are unavailable, decision made without them;
-- `no_eta`: there is no accurate ETA.
-
-The Russian wording for these reasons is built in `presenters/`; `domain/` keeps
-only the stable codes.
+The algorithm keeps the `Yandex live -> Yandex history -> no ETA` order and
+ships a machine-readable reason code next to the chosen ETA, from a direct
+live ETA down to a risk-adjusted fallback or an honest `no_eta`. Full list of
+codes: [docs/CLI.md](./docs/CLI.md#eta-decision-reason-codes).
 
 ## Testing
 
@@ -202,21 +136,16 @@ pip install -e ".[test,yandex]"
 pytest
 ```
 
-There is also a local `./bin/check` that runs shell linting, the smoke package,
-and drift checks in one pass, plus focused scripts:
-
-```bash
-./bin/check
-./bin/smoke-web-local
-./bin/smoke-yandex
-./bin/package-smoke
-```
+There is also a local `./bin/check`, running shell linting, the smoke package,
+and drift checks in one pass, plus focused scripts like `./bin/smoke-yandex`
+and `./bin/package-smoke`.
 
 CI workflow: [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
 ## Docs
 
 - [docs/README.md](./docs/README.md): index.
+- [docs/CLI.md](./docs/CLI.md): full command reference and ETA reason codes.
 - [docs/QUALITY.md](./docs/QUALITY.md): checks.
 - [docs/SECURITY.md](./docs/SECURITY.md): `.env`, secrets, deploy hygiene.
 - [docs/RUNBOOK.md](./docs/RUNBOOK.md): diagnostics.
