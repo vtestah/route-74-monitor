@@ -1,29 +1,31 @@
 # Tests (pytest layer)
 
-Этот каталог — pytest-слой для локальной разработки. Он **дополняет**, а не
-заменяет встроенный smoke-харнесс проекта.
+This directory is the pytest layer for local development. It complements the
+project smoke harness, it does not replace it.
 
-## Что канон
+## What Is Canonical
 
-- `./bin/check` — канонический gate проекта (smoke-модули, CLI, границы слоёв,
-  окружение). Прод-деплой (`bin/server-update`) тоже гоняет smoke.
-- `src/route74/smoke/*` — источник правды для проверок; pytest их не заменяет.
+- `./bin/check` is the canonical project gate (smoke modules, CLI, layer
+  boundaries, environment). The production deploy (`bin/server-update`) runs smoke
+  too.
+- `src/route74/smoke/*` is the source of truth for checks; pytest does not replace
+  it.
 
-## Что здесь
+## What Is Here
 
-- `conftest.py` — общие фикстуры (temp SQLite, фейковые источники, фикс времени),
-  переиспользуют существующие `reporting_smoke_fixtures`.
-- `test_dashboard_data.py` — модульные тесты агрегации дашборда
-  (порог малой выборки, одинарное округление, p80/avg).
-- `test_smoke_suite.py` — мост: автодискавер `route74.smoke.*_smoke` и прогон
-  каждого `main()` как отдельного pytest-кейса.
+- `conftest.py`: shared fixtures (temp SQLite, fake sources, fixed time), reusing
+  the existing `reporting_smoke_fixtures`.
+- `test_dashboard_data.py`: unit tests for dashboard aggregation (small-sample
+  threshold, single rounding, p80/avg).
+- `test_smoke_suite.py`: the bridge that auto-discovers `route74.smoke.*_smoke` and
+  runs each `main()` as a separate pytest case.
 
-## Запуск
+## Running
 
 ```bash
 pip install -e '.[test]'
 pytest -q
 ```
 
-pytest — dev-зависимость (`[project.optional-dependencies] test`). На сервер не
-устанавливается и в прод-pipeline не входит.
+pytest is a dev dependency (`[project.optional-dependencies] test`). It is not
+installed on the server and is not part of the production pipeline.
