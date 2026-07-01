@@ -1,34 +1,35 @@
-# Локальный Процесс
+# Local Workflow
 
-## Первый Запуск
+## First Run
 
 ```bash
 ./bin/onboard
 ```
 
-Скрипт создает `.venv`, устанавливает пакет в editable-режиме и создает `.env` из `.env.example`, если его еще нет.
+The script creates `.venv`, installs the package in editable mode, and creates
+`.env` from `.env.example` if it does not exist yet.
 
-## Изменение Кода
+## Changing Code
 
-1. Найти релевантный слой в [../ARCHITECTURE.md](../ARCHITECTURE.md).
-2. Внести маленькое изменение.
-3. Запустить:
+1. Find the relevant layer in the Architecture section of the root README.
+2. Make a small change.
+3. Run:
 
 ```bash
 ./bin/check
 ```
 
-4. Если менялась интеграция Яндекса:
+4. If the Yandex integration changed:
 
 ```bash
 ./bin/smoke-yandex
 ```
 
-## Перед GitHub
+## Before GitHub
 
-- Не коммитить `.env`.
-- Не коммитить `data/*.sqlite`.
-- Проверить `./bin/check`.
-- Заполнить `.github/pull_request_template.md`: проверки, риск-секцию и
-  оставшийся dirty scope.
-- При необходимости сначала сделать локальный commit, затем push/PR.
+- Do not commit `.env`.
+- Do not commit `data/*.sqlite`.
+- Run `./bin/check`.
+- Fill in the pull request template: checks, the risk section, and any remaining
+  dirty scope.
+- If needed, make a local commit first, then push or open a PR.

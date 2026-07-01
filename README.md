@@ -12,6 +12,8 @@ back to local Yandex history when needed, and shows `no ETA` honestly when there
 is no signal. Early and final alerts can go out over Pushover, and the runtime
 works fine without it.
 
+![Route 74 Monitor web UI: the catch-first result with a live backend/push/watch status strip](docs/media/web-ui.png)
+
 ## At a glance
 
 - Runtime: Python 3.11+, FastAPI, SQLite.
@@ -184,21 +186,33 @@ ships a machine-readable explanation next to the chosen ETA:
 The Russian wording for these reasons is built in `presenters/`; `domain/` keeps
 only the stable codes.
 
-## Checks
+## Testing
 
-Base:
+Tests run with pytest and gate CI on every push.
+
+- `tests/test_smoke_suite.py` is a discovery bridge: it turns the in-package
+  `route74.smoke.*` modules into individual pytest cases, so the whole smoke
+  suite (over 80 modules) reports at pytest granularity.
+- Focused unit tests live in `tests/`, for example the dashboard data layer.
+- Ruff handles lint and format. CI runs `ruff check`, `ruff format --check`, and
+  `pytest` with coverage.
+
+```bash
+pip install -e ".[test,yandex]"
+pytest
+```
+
+There is also a local `./bin/check` that runs shell linting, the smoke package,
+and drift checks in one pass, plus focused scripts:
 
 ```bash
 ./bin/check
-```
-
-Focused:
-
-```bash
 ./bin/smoke-web-local
 ./bin/smoke-yandex
 ./bin/package-smoke
 ```
+
+CI workflow: [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
 ## Docs
 

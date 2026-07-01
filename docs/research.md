@@ -1,36 +1,35 @@
-# Источники Данных
+# Data Sources
 
-## Текущая Стратегия
+## Current Strategy
 
-Runtime использует только Yandex-family источники:
+The runtime uses Yandex-family sources only:
 
-1. Яндекс.Карты как live ETA.
-2. Локальная история Яндекса из `route74 yandex-collect` как резервный прогноз.
+1. Yandex Maps as the live ETA.
+2. Local Yandex history from `route74 yandex-collect` as a fallback forecast.
 
-Официальное расписание больше не используется в runtime. Если live и история
-не дают ETA, бот честно сообщает, что точного сигнала нет.
+The official schedule is no longer used in the runtime. If neither live nor
+history yields an ETA, the app says honestly that there is no accurate signal.
 
-## Яндекс
+## Yandex
 
-Основные внутренние masstransit методы:
+The main internal masstransit methods:
 
-- `getVehiclePredictionInfo` - лучший live ETA, если response содержит
-  посадочную остановку текущего профиля.
-- `getStopInfo` - stop-level источник; `Estimated` можно использовать как ETA,
-  `Scheduled`/`Frequencies` только как диагностику.
-- `getLine` - топология маршрута: `threadId`, порядок остановок, геометрия.
-  Это не ETA.
-- `getStopTimetable` - расписание/частоты, не live ETA без `Estimated`.
-- `getVehiclesInfoWithRegion` - диагностические координаты и nested
+- `getVehiclePredictionInfo`: the best live ETA when the response contains the
+  boarding stop of the current profile.
+- `getStopInfo`: a stop-level source; `Estimated` can be used as an ETA,
+  `Scheduled`/`Frequencies` only as diagnostics.
+- `getLine`: route topology, `threadId`, stop order, geometry. This is not an ETA.
+- `getStopTimetable`: schedule and frequencies, not a live ETA without `Estimated`.
+- `getVehiclesInfoWithRegion`: diagnostic coordinates and the nested
   `VehicleMetaData.Transport.threadId`.
-  Этот `threadId` используется для фильтрации направления профиля и, когда
-  возможно, пришивается к `getVehiclePredictionInfo` по `vehicleId`.
-  Route URL открывается с явным `threadId` и `openedBy[stopId]`, иначе Yandex
-  может отдать машины противоположного направления как основной сценарий.
-  Raw ETA выше 60 минут для профиля не используется как прогнозный сэмпл:
-  такие значения выглядят как полный круг маршрута, а не ближайшая посадка.
+  This `threadId` filters the profile direction and, when possible, is stitched
+  onto `getVehiclePredictionInfo` by `vehicleId`.
+  The route URL is opened with an explicit `threadId` and `openedBy[stopId]`,
+  otherwise Yandex may return vehicles of the opposite direction as the main case.
+  A raw ETA above 60 minutes for the profile is not used as a forecast sample:
+  such values look like a full route loop, not the nearest boarding.
 
-Команды:
+Commands:
 
 ```bash
 route74 yandex-dump --profile morning
@@ -38,16 +37,16 @@ route74 yandex-line --dump path/to/dump.json
 route74 yandex-collect --once --profile all
 ```
 
-Подробный stop/thread контракт профилей вынесен в
-[`YANDEX_CONTRACT.md`](./YANDEX_CONTRACT.md). Там зафиксировано, какие stop id
-используются для stop-level страницы, какие target stop id проверяются внутри
-`getVehiclePredictionInfo`, какие `threadId` подтверждают направление и почему
-runtime должен fail-closed при несовпадении.
+The detailed per-profile stop/thread contract lives in
+[`YANDEX_CONTRACT.md`](./YANDEX_CONTRACT.md). It records which stop ids are used
+for the stop-level page, which target stop ids are checked inside
+`getVehiclePredictionInfo`, which `threadId`s confirm the direction, and why the
+runtime must fail-closed on a mismatch.
 
-## Статистика
+## Statistics
 
-`route74 yandex-collect` пишет Yandex snapshots и vehicle observations в
-SQLite. Это база для будущего Yandex-only прогноза заранее: накопить пары
-“машина/позиция/threadId сейчас -> через сколько она дошла до моей остановки”.
+`route74 yandex-collect` writes Yandex snapshots and vehicle observations into
+SQLite. This is the base for a future Yandex-only forecast: accumulate pairs of
+"vehicle position and threadId now -> how long it took to reach my stop".
 
-Пока это слой фактов, а не отдельная модель прогноза.
+For now it is a fact layer, not a separate forecast model.

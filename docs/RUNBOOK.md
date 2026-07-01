@@ -1,8 +1,8 @@
-# Runbook Диагностики
+# Diagnostics Runbook
 
-Короткая карта инцидентов для web runtime и прогнозного слоя.
+A short incident map for the web runtime and the forecast layer.
 
-## Первый Осмотр
+## First Look
 
 ```bash
 git status --short --untracked-files=all
@@ -11,12 +11,12 @@ route74 support-snapshot --profile morning
 route74 support-report --profile morning
 ```
 
-Фиксируй только symptom, профиль и статус источника. Секреты и персональные
-данные в отчёты не копировать.
+Record only the symptom, the profile, and the source status. Do not copy secrets
+or personal data into reports.
 
 ## Web Runtime
 
-Если браузерный сценарий ведёт себя странно:
+If the browser flow behaves oddly:
 
 ```bash
 ./bin/smoke-web-local
@@ -25,25 +25,24 @@ route74 stats morning
 route74 stats evening
 ```
 
-Что смотреть:
+What to look at:
 
-- `watch-state` — активные watch, просрочку, runtime errors файла.
-- `stats` — Yandex live/history статус, readiness и next action.
-- `support-report` — полный профильный snapshot.
+- `watch-state`: active watches, expiry, runtime errors in the file.
+- `stats`: Yandex live/history status, readiness, and next action.
+- `support-report`: the full per-profile snapshot.
 
 ## Pushover
 
-Если уведомления не приходят:
+If notifications do not arrive:
 
-1. Проверить, что заданы оба ключа: `PUSHOVER_APP_TOKEN`,
-   `PUSHOVER_USER_KEY`.
-2. Убедиться, что web app продолжает работать и без уведомлений.
-3. Проверить локально `./bin/smoke-web-local`.
-4. Проверить сетевую доступность `api.pushover.net` уже вне репозитория.
+1. Check that both keys are set: `PUSHOVER_APP_TOKEN`, `PUSHOVER_USER_KEY`.
+2. Confirm the web app keeps working without notifications.
+3. Check locally with `./bin/smoke-web-local`.
+4. Check network access to `api.pushover.net` outside the repo.
 
 ## Yandex
 
-Если ETA выглядит ненадёжно:
+If the ETA looks unreliable:
 
 ```bash
 ./bin/smoke-yandex
@@ -53,10 +52,10 @@ route74 forecast-readiness --window weekday_morning_09_12
 route74 forecast-coverage --window weekday_morning_09_12
 ```
 
-Если `yandex-canary` даёт warning, не добавляй новый fallback-источник. Чини
-contract, parser или readiness.
+If `yandex-canary` warns, do not add a new fallback source. Fix the contract, the
+parser, or readiness.
 
-## SQLite И Отчёты
+## SQLite and Reports
 
 ```bash
 route74 db-health
@@ -65,7 +64,7 @@ route74 report-stats --days 30
 route74 yandex-stats --hours 24
 ```
 
-## После Исправления
+## After a Fix
 
 ```bash
 ./bin/check

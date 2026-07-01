@@ -1,28 +1,28 @@
-# Решения
+# Decisions
 
-## 2026-06-08: Старый chat runtime удалён в пользу web app
+## 2026-06-08: Old chat runtime dropped in favor of the web app
 
-Пользовательский transport переведён из чат-runtime в браузерное приложение на
-FastAPI. Основной сценарий остался тем же: `🎯 Поймать 74`, catch-first ответ и
-тот же commute/presenter слой.
+The user-facing transport moved from a chat runtime to a browser app on FastAPI.
+The main flow stayed the same: `🎯 Поймать 74`, a catch-first answer, and the same
+commute and presenter layer.
 
-## 2026-06-08: Уведомления вынесены в notifier interface
+## 2026-06-08: Notifications moved behind a notifier interface
 
-Pushover отправляется через отдельный adapter в `src/route74/notifications/`.
-Web handlers не знают про Pushover HTTP API напрямую.
+Pushover is sent through a separate adapter in `src/route74/notifications/`. Web
+handlers do not talk to the Pushover HTTP API directly.
 
-## 2026-06-08: Pushover остаётся опциональным
+## 2026-06-08: Pushover stays optional
 
-Если `PUSHOVER_APP_TOKEN` и `PUSHOVER_USER_KEY` не настроены, runtime
-использует no-op notifier и не падает.
+If `PUSHOVER_APP_TOKEN` and `PUSHOVER_USER_KEY` are not set, the runtime uses a
+no-op notifier and does not crash.
 
-## 2026-06-08: Watch остаётся одиночными сигналами
+## 2026-06-08: Watch stays single signals
 
-Ранние сигналы и финальный `ВЫХОДИ СЕЙЧАС` отправляются одиночными
-уведомлениями. Это сохраняет понятный alarm-path и не смешивает несколько
-сигналов в одну доставку.
+Early signals and the final `ВЫХОДИ СЕЙЧАС` go out as single notifications. This
+keeps a clear alarm path and does not merge several signals into one delivery.
 
-## 2026-06-08: Бизнес-логика commute сохранена
+## 2026-06-08: Commute business logic kept
 
-`domain/services/presenters`, Yandex live/history, утренний и вечерний буферы,
-decision logic и CLI preview сохранены без transport compatibility facade.
+`domain/services/presenters`, Yandex live and history, the morning and evening
+buffers, the decision logic, and the CLI preview were kept without a transport
+compatibility facade.

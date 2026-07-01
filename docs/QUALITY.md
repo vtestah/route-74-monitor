@@ -1,22 +1,22 @@
-# Качество
+# Quality
 
-## Базовая Проверка
+## Base Check
 
 ```bash
 ./bin/check
 ```
 
-Что входит в базовый прогон:
+What the base run covers:
 
-- shell syntax для `bin/*`;
-- `compileall` и cleanup bytecode;
-- smoke package-модули;
+- shell syntax for `bin/*`;
+- `compileall` and bytecode cleanup;
+- smoke package modules;
 - web runtime smoke;
 - package smoke;
-- CLI help/version/explain и базовые reject-cases;
-- отсутствие drift между docs, env и runtime.
+- CLI help/version/explain and basic reject cases;
+- no drift between docs, env, and runtime.
 
-## Профильные Проверки
+## Focused Checks
 
 Web runtime:
 
@@ -36,22 +36,22 @@ Packaging:
 ./bin/package-smoke
 ```
 
-Commute слой:
+Commute layer:
 
 ```bash
 .venv/bin/python -m route74.smoke.commute_smoke
 ```
 
-## Правила Чистого Кода
+## Clean Code Rules
 
-- `domain/` — без web, notifier, SQLite и HTTP.
-- `services/` — orchestration, без FastAPI/HTML/Pushover.
-- `presenters/` — только текст.
-- `web/` — transport и UI, без бизнес-правил.
-- `notifications/` — отправка уведомлений через interface/adapter.
-- `storage/` — schema, migrations, reports, health.
+- `domain/`: no web, notifier, SQLite, or HTTP.
+- `services/`: orchestration, no FastAPI/HTML/Pushover.
+- `presenters/`: text only.
+- `web/`: transport and UI, no business rules.
+- `notifications/`: sending through an interface and adapter.
+- `storage/`: schema, migrations, reports, health.
 
-## После Изменений
+## After Changes
 
-- Менял web/UI/notifier: `./bin/check`, `./bin/smoke-web-local`.
-- Менял Yandex integration: `./bin/check`, `./bin/smoke-yandex`.
+- Changed web/UI/notifier: `./bin/check`, `./bin/smoke-web-local`.
+- Changed Yandex integration: `./bin/check`, `./bin/smoke-yandex`.

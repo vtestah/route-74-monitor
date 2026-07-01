@@ -1,40 +1,38 @@
-# Безопасность
+# Security
 
-## Секреты
+## Secrets
 
-В git не должны попадать:
+These must never land in git:
 
-- `.env` и `.env.*`;
+- `.env` and `.env.*`;
 - `PUSHOVER_APP_TOKEN`, `PUSHOVER_USER_KEY`;
-- реальные SQLite/JSON данные из `data/`;
-- ручные Yandex dumps;
-- точные личные адреса и рабочие локации.
+- real SQLite/JSON data from `data/`;
+- manual Yandex dumps;
+- exact personal addresses and work locations.
 
-В репозитории допускается только `.env.example` с пустыми или безопасными
-placeholder-значениями.
+Only `.env.example` with empty or safe placeholder values is allowed in the repo.
 
-## Локальные Данные
+## Local Data
 
-Web runtime использует локальные данные:
+The web runtime uses local data:
 
 - `data/route74.sqlite`
 - `data/web_watches.json`
 
-Эти файлы должны оставаться вне git.
+These files stay out of git.
 
-## Перед Публикацией
+## Before Publishing
 
 ```bash
 ./bin/check
 git status --short --untracked-files=all
 ```
 
-Если в статусе видны `.env`, реальные `data/*` или ручные dump-файлы,
-публиковать нельзя.
+If the status shows `.env`, real `data/*`, or manual dump files, do not publish.
 
-## Если Секрет Утёк
+## If a Secret Leaks
 
-1. Перевыпустить ключ на стороне сервиса.
-2. Обновить локальный `.env`.
-3. Убедиться, что секрет не лежит в tracked-файлах.
-4. Повторно запустить `./bin/check`.
+1. Rotate the key on the service side.
+2. Update the local `.env`.
+3. Make sure the secret is not in tracked files.
+4. Run `./bin/check` again.

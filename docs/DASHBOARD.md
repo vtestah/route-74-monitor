@@ -1,110 +1,117 @@
-# Web И Dashboard
+# Web and Dashboard
 
-Основной пользовательский интерфейс Route74 теперь браузерный.
+The main Route74 user interface is now browser-based.
 
-## Что Есть На Экране
+## What Is on the Screen
 
-- кнопка `🎯 Поймать 74`;
-- быстрый выбор утра и вечера;
-- карточки с главным действием, временем выхода, ETA, ожиданием и источником;
-- короткое объяснение ETA-решения: выбранный сигнал, запас риска или причина
-  `no ETA`;
-- подробный commute-ответ в раскрываемом блоке;
-- статус Pushover;
-- управление watch с человекочитаемыми статусами;
-- свёрнутый блок диагностики со `stats` и `support`.
+- the `🎯 Поймать 74` button;
+- a quick morning/evening switch;
+- cards with the main action, departure time, ETA, wait, and source;
+- a short explanation of the ETA decision: the chosen signal, the risk buffer, or
+  the `no ETA` reason;
+- the detailed commute answer in an expandable block;
+- Pushover status;
+- watch control with human-readable statuses;
+- a collapsed diagnostics block with `stats` and `support`.
 
-Ошибки запросов показываются отдельно и не удаляют последний успешный
-расчёт. На мобильном экране основная кнопка закреплена снизу.
+Request errors are shown separately and do not clear the last successful result.
+On a mobile screen the main button is pinned to the bottom.
 
-## Запуск
+## Running
 
-Локальный web UI:
+Local web UI:
 
 ```bash
 ./bin/web
 ```
 
-Или через launcher:
+Or through the launcher:
 
 ```bash
 route74-web-open
 ```
 
-Открыть:
+Open:
 
 ```text
 http://127.0.0.1:8074
 ```
 
-Удалённый web UI через SSH-туннель:
+Remote web UI over an SSH tunnel:
 
 ```bash
 ./bin/web-remote
 ```
 
-## Локальный Smoke
+## Local Smoke
 
 ```bash
 ./bin/smoke-web-local
 ```
 
-## Операторский Dashboard
+## Operator Dashboard
 
-Старый dashboard со статистикой по сбору и support-обзором снова живёт отдельно:
+The old dashboard with collection stats and a support overview lives separately
+again:
 
 ```bash
 ./bin/dashboard
 ```
 
-По умолчанию он поднимается локально из текущей БД на `127.0.0.1:8075`.
+By default it starts locally from the current database on `127.0.0.1:8075`.
 
-Если нужен другой порт или БД:
+For a different port or database:
 
 ```bash
 ./bin/dashboard --port 8076
 ./bin/dashboard --db data/route74.sqlite
 ```
 
-## Как Читать Статусы
+## How to Read the Statuses
 
-Сверху dashboard должен быстро отвечать на вопрос, можно ли доверять данным.
-Для этого сводка разделена на четыре части:
+At the top, the dashboard should quickly answer whether the data can be trusted.
+The summary is split into four parts:
 
-- `System health` - база, collector, canary и watch state;
-- `Yandex source quality` - есть ли свежие ETA-замеры и насколько они полные;
-- `History readiness` - готовы ли окна истории и хватает ли bucket coverage;
-- `Runtime quality` - есть ли живые bot/runtime ответы и не слишком ли мала выборка.
+- `System health`: database, collector, canary, and watch state;
+- `Yandex source quality`: whether there are fresh ETA measurements and how
+  complete they are;
+- `History readiness`: whether the history windows are ready and bucket coverage
+  is enough;
+- `Runtime quality`: whether there are live bot/runtime answers and the sample is
+  not too small.
 
-Ключевые состояния интерпретируются так:
+Key states read as follows:
 
-- `live ETA` - точный ETA из Яндекса, пригодный для решения;
-- `coordinates_only` - координаты есть, ETA нет; это диагностический сигнал, а не ошибка;
-- `unavailable` - источник недоступен; причина должна показываться, если известна;
-- `insufficient data` - данных мало для жёсткого вывода, особенно на маленькой выборке;
-- `integrity gaps` - есть разрыв между forecast/report/runtime слоями;
-- `stale history` - история есть, но она устарела или не покрывает нужное окно.
+- `live ETA`: an accurate ETA from Yandex, usable for a decision;
+- `coordinates_only`: coordinates exist, ETA does not; a diagnostic signal, not an
+  error;
+- `unavailable`: the source is down; the reason should be shown when known;
+- `insufficient data`: too little data for a hard conclusion, especially on a
+  small sample;
+- `integrity gaps`: there is a gap between the forecast, report, and runtime layers;
+- `stale history`: history exists but is out of date or does not cover the needed
+  window.
 
-`recent samples`, `window series` и `stats` должны читаться вместе: верхняя сводка
-говорит, можно ли доверять данным, а нижние блоки показывают, почему именно.
+`recent samples`, `window series`, and `stats` should be read together: the top
+summary says whether the data can be trusted, and the lower blocks show why.
 
-## Инварианты
+## Invariants
 
-- web UI не должен тащить в себя бизнес-логику;
-- отсутствие Pushover не должно ломать страницу;
-- watch-сигналы остаются одиночными уведомлениями;
-- источник ETA в UI остаётся `Yandex live -> Yandex history -> no ETA`.
+- the web UI must not pull business logic into itself;
+- a missing Pushover must not break the page;
+- watch signals stay single notifications;
+- the ETA source in the UI stays `Yandex live -> Yandex history -> no ETA`.
 
 ## ETA Reason Codes
 
-`decision_ui` отдаёт стабильные `eta_reason_code` и `eta_action_code`, чтобы
-браузер не угадывал смысл по warning-строкам. Основные reason-коды:
+`decision_ui` returns stable `eta_reason_code` and `eta_action_code` so the
+browser does not guess meaning from warning strings. The main reason codes:
 
-- `live_eta` — прямой live ETA выбран;
-- `corrected_live` — выбран live ETA с поправкой;
-- `vehicle_progress` — выбран координатный прогноз;
-- `history_fallback` — выбран fallback по истории Яндекса;
-- `risk_buffer` — к решению добавлен запас риска;
-- `weak_live_ignored` — слабый live/координатный сигнал не выбран;
-- `storage_guardrail` — статистические поправки недоступны;
-- `no_eta` — точного ETA нет.
+- `live_eta`: a direct live ETA was chosen;
+- `corrected_live`: a corrected live ETA was chosen;
+- `vehicle_progress`: a coordinate-based forecast was chosen;
+- `history_fallback`: a Yandex history fallback was chosen;
+- `risk_buffer`: a risk buffer was added to the decision;
+- `weak_live_ignored`: a weak live or coordinate signal was not chosen;
+- `storage_guardrail`: statistical corrections are unavailable;
+- `no_eta`: there is no accurate ETA.

@@ -1,11 +1,12 @@
-# Запуск На Сервере
+# Running on a Server
 
-Инструкция для Linux-сервера с `systemd`. На сервере обычно живут два процесса:
+Instructions for a Linux server with `systemd`. The server usually runs two
+processes:
 
-- `route74-web` — web приложение;
-- `route74 yandex-collect` — сбор истории Яндекса.
+- `route74-web`: the web app;
+- `route74 yandex-collect`: Yandex history collection.
 
-## Подготовка
+## Preparation
 
 ```bash
 sudo apt update
@@ -15,25 +16,25 @@ sudo mkdir -p /opt/route74
 sudo chown route74:route74 /opt/route74
 ```
 
-Для Playwright/Chromium может понадобиться системный Chrome и swap, если
-collector работает через browser mode.
+Playwright/Chromium may need system Chrome and swap if the collector runs in
+browser mode.
 
-## Деплой Кода
+## Deploying Code
 
-С локальной машины:
+From the local machine:
 
 ```bash
 ./bin/server-sync
 ```
 
-Скрипт переносит код в `/opt/route74`, не трогает `.env`, `.venv` и `data/`,
-а затем запускает `bin/server-update`. `server-update` сам ставит актуальные
-`systemd` unit-файлы из `deploy/systemd/` и убирает legacy `route74-bot` /
-`route74-dashboard`.
+The script copies the code to `/opt/route74`, leaves `.env`, `.venv`, and `data/`
+alone, and then runs `bin/server-update`. `server-update` installs the current
+`systemd` unit files from `deploy/systemd/` and removes the legacy `route74-bot`
+and `route74-dashboard`.
 
 ## `.env`
 
-Минимально:
+Minimal:
 
 ```text
 ROUTE74_DB_PATH=/opt/route74/data/route74.sqlite
@@ -49,9 +50,9 @@ PUSHOVER_APP_TOKEN=
 PUSHOVER_USER_KEY=
 ```
 
-Если Pushover не настроен, web runtime всё равно должен подняться.
+If Pushover is not configured, the web runtime should still start.
 
-## Быстрая Проверка
+## Quick Check
 
 ```bash
 cd /opt/route74
@@ -64,14 +65,14 @@ cd /opt/route74
 
 ## systemd
 
-Актуальный шаблон лежит в `deploy/systemd/route74-web.service`.
+The current template is in `deploy/systemd/route74-web.service`.
 
-Для collector используется `deploy/systemd/route74-yandex-collect.service`.
+The collector uses `deploy/systemd/route74-yandex-collect.service`.
 
-Если запуск идёт через `./bin/server-sync`, вручную ставить unit обычно не
-нужно: `bin/server-update` синхронизирует их сам.
+If you deploy through `./bin/server-sync`, installing the unit by hand is usually
+not needed: `bin/server-update` syncs them itself.
 
-Пример unit для web app:
+Example unit for the web app:
 
 ```ini
 [Unit]
@@ -89,7 +90,7 @@ Restart=always
 WantedBy=multi-user.target
 ```
 
-После установки:
+After installing:
 
 ```bash
 sudo systemctl daemon-reload
@@ -97,21 +98,21 @@ sudo systemctl enable --now route74-web
 sudo systemctl status route74-web --no-pager
 ```
 
-Collector можно запускать отдельным service/timer.
+The collector can run as a separate service or timer.
 
-## Доступ
+## Access
 
-По умолчанию web app слушает `127.0.0.1:8074`.
+By default the web app listens on `127.0.0.1:8074`.
 
-Если нужен самый простой доступ без домена и без reverse proxy, можно
-открыть приложение по публичному IP сервера:
+For the simplest access without a domain or a reverse proxy, you can open the app
+on the server public IP:
 
 ```text
 ROUTE74_WEB_HOST=0.0.0.0
 ROUTE74_WEB_ALLOW_PUBLIC=1
 ```
 
-Тогда URL будет вида `http://<server-ip>:8074/`. Это обычный HTTP без TLS и
-без защиты, поэтому подходит только для личного закрытого использования.
+The URL is then `http://<server-ip>:8074/`. This is plain HTTP with no TLS and no
+protection, so it only fits closed personal use.
 
-Если нужен более аккуратный внешний доступ, ставьте reverse proxy и HTTPS.
+For cleaner external access, put a reverse proxy and HTTPS in front.

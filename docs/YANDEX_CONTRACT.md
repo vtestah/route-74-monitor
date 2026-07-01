@@ -1,91 +1,93 @@
 # Yandex Stop/Thread Contract
 
-Этот документ фиксирует, как бот понимает остановки и направления Яндекса для
-маршрута 74. Source of truth для runtime-значений остается в
+This document records how the app understands Yandex stops and directions for
+route 74. The source of truth for runtime values stays in
 [`src/route74/sources/yandex/constants.py`](../src/route74/sources/yandex/constants.py):
-документ объясняет контракт, но не заменяет код.
+this document explains the contract but does not replace the code.
 
-## Назначение
+## Purpose
 
-Yandex masstransit API возвращает несколько похожих stop id для одной
-посадочной зоны и разные `threadId` для направлений маршрута. Бот не угадывает
-направление по названию остановки: live ETA считается пригодным только после
-проверки stop/thread контракта текущего профиля.
+The Yandex masstransit API returns several similar stop ids for one boarding zone
+and different `threadId`s for the route directions. The app does not guess the
+direction from a stop name: a live ETA counts as usable only after the stop/thread
+contract of the current profile is verified.
 
-Если контракт не подтвержден, runtime должен fail-closed: использовать историю
-Яндекса или честно показать, что точного ETA нет.
+If the contract is not confirmed, the runtime must fail-closed: use Yandex history
+or say honestly that there is no accurate ETA.
 
-## Профили
+## Profiles
 
-| Профиль | stopInfo stop id | prediction target stop ids | expected thread ids | Смысл |
+| Profile | stopInfo stop id | prediction target stop ids | expected thread ids | Meaning |
 | --- | --- | --- | --- | --- |
-| `morning` | `stop__9982194` | `stop__9982194` | `2161326768` | посадка у Медицинского центра в сторону Цветного |
-| `evening` | `stop__9982094` | `stop__9982094` | `2161326764` | посадка у ВЦ в сторону улицы Твардовского |
+| `morning` | `stop__9982194` | `stop__9982194` | `2161326768` | morning boarding stop toward the morning terminal |
+| `evening` | `stop__9982094` | `stop__9982094` | `2161326764` | evening boarding stop toward the evening terminal |
 
-`stopInfo stop id` нужен для открытия stop-level страницы Яндекса. `prediction
-target stop id` проверяется внутри ответа `getVehiclePredictionInfo`. Старые
-альтернативные id не использовать: утро фиксируется на `stop__9982194`, вечер -
-на `stop__9982094`.
+The `stopInfo stop id` is used to open the Yandex stop-level page. The `prediction
+target stop id` is checked inside the `getVehiclePredictionInfo` response. Do not
+use old alternative ids: morning is fixed on `stop__9982194`, evening on
+`stop__9982094`.
 
-Terminal stop ids из `getLine` для текущего направления профиля:
-`morning` - `3174363647` (`Цветной проезд`), `evening` - `stop__9982203`
-(`Улица Твардовского`).
+Terminal stop ids from `getLine` for the current profile direction: `morning` is
+`3174363647`, `evening` is `stop__9982203`.
 
-## Правила Доверия
+## Trust Rules
 
-`getVehiclePredictionInfo` считается live ETA только если одновременно верно:
+`getVehiclePredictionInfo` counts as a live ETA only if all of these hold:
 
-- `threadId` машины совпадает с `expected thread ids` профиля;
-- в списке `stops` конкретной машины есть один из `prediction target stop ids`;
-- ETA не выглядит как полный круг маршрута: raw ETA выше 60 минут не пишется как
-  прогнозный sample.
+- the vehicle `threadId` matches the profile `expected thread ids`;
+- the `stops` list of that specific vehicle contains one of the `prediction target
+  stop ids`;
+- the ETA does not look like a full route loop: a raw ETA above 60 minutes is not
+  written as a forecast sample.
 
-Если `threadId` неизвестен, направление не совпало или целевой stop id не найден,
-прогноз получает `NO_TARGET` и не используется как ETA.
+If the `threadId` is unknown, the direction did not match, or the target stop id is
+not found, the forecast gets `NO_TARGET` and is not used as an ETA.
 
-## Методы Яндекса
+## Yandex Methods
 
-- `getVehiclePredictionInfo` - главный live ETA после проверки stop/thread.
-- `getStopInfo` - stop-level источник; `Estimated` можно использовать как ETA,
-  `Scheduled`/`Frequencies` остаются диагностикой.
-- `getVehiclesInfoWithRegion` - диагностические координаты, `vehicleId` и
-  nested `VehicleMetaData.Transport.threadId`; когда возможно, этот `threadId`
-  пришивается к `getVehiclePredictionInfo` по `vehicleId`.
-- `getLine` - топология маршрута: thread ids, порядок остановок и геометрия. Это
-  не ETA.
-- `getStopTimetable` - расписание/частоты, не live ETA без `Estimated`.
+- `getVehiclePredictionInfo`: the main live ETA after the stop/thread check.
+- `getStopInfo`: a stop-level source; `Estimated` can be used as an ETA,
+  `Scheduled`/`Frequencies` stay diagnostics.
+- `getVehiclesInfoWithRegion`: diagnostic coordinates, `vehicleId`, and the nested
+  `VehicleMetaData.Transport.threadId`; when possible this `threadId` is stitched
+  onto `getVehiclePredictionInfo` by `vehicleId`.
+- `getLine`: route topology, thread ids, stop order, and geometry. This is not an
+  ETA.
+- `getStopTimetable`: schedule and frequencies, not a live ETA without `Estimated`.
 
-Route URL открывается с явным `threadId` и `openedBy[stopId]`, чтобы Яндекс сразу
-загружал нужное направление. Параметры строит `route_thread_params()`.
+The route URL is opened with an explicit `threadId` and `openedBy[stopId]` so that
+Yandex loads the right direction immediately. `route_thread_params()` builds the
+parameters.
 
-## Где Хранить Детали
+## Where to Keep Details
 
-- Runtime-значения профилей: только
+- Runtime profile values: only
   [`constants.py`](../src/route74/sources/yandex/constants.py).
-- Минимальный контракт request/payload/response: этот документ.
-- Исполняемые примеры shape: smoke-кейсы в
+- The minimal request/payload/response contract: this document.
+- Executable shape examples: the smoke cases in
   [`sources/yandex/smoke/`](../src/route74/sources/yandex/smoke/).
-- Raw dumps Яндекса: локально в `data/` или во временных файлах из
-  `route74 yandex-dump`; в git их не хранить.
+- Raw Yandex dumps: locally in `data/` or in temp files from
+  `route74 yandex-dump`; do not keep them in git.
 
-Полные ответы Яндекса шумные и могут содержать нестабильные поля. В git лучше
-держать только минимальные shape, которые реально читает parser/runtime. Если
-нужна регрессия по реальному ответу, добавлять sanitized fixture с минимальным
-набором полей, без session/query/token деталей.
+Full Yandex responses are noisy and can contain unstable fields. In git it is
+better to keep only the minimal shapes the parser and runtime actually read. If a
+regression against a real response is needed, add a sanitized fixture with a
+minimal set of fields, without session/query/token details.
 
-## Запросы
+## Requests
 
-Яндекс-методы вызываются как HTTP endpoints или ловятся браузером из Network.
-Для runtime важны не все query параметры, а только привязка к профилю:
+Yandex methods are called as HTTP endpoints or captured by the browser from the
+Network tab. Not all query parameters matter for the runtime, only the binding to
+the profile:
 
-| Метод | Как попадает в runtime | Что задает запрос |
+| Method | How it reaches the runtime | What the request sets |
 | --- | --- | --- |
-| `getStopInfo` | browser network capture | stop page URL со stop id из `STOP_ID_BY_PROFILE` |
-| `getVehiclePredictionInfo` | browser network capture после клика по машине | vehicle `id` в query; `threadId` пришивается из соседнего `getVehiclesInfoWithRegion` |
-| `getVehiclesInfoWithRegion` | HTTP или browser network capture | route map URL профиля с `threadId` и `openedBy[stopId]` |
-| `getLine` | diagnostics/CLI dump | line/thread topology для проверки stop id, thread id и геометрии |
+| `getStopInfo` | browser network capture | stop page URL with the stop id from `STOP_ID_BY_PROFILE` |
+| `getVehiclePredictionInfo` | browser network capture after a click on a vehicle | vehicle `id` in the query; `threadId` stitched from a nearby `getVehiclesInfoWithRegion` |
+| `getVehiclesInfoWithRegion` | HTTP or browser network capture | route map URL of the profile with `threadId` and `openedBy[stopId]` |
+| `getLine` | diagnostics/CLI dump | line/thread topology to check stop id, thread id, and geometry |
 
-В URL карты обязательно должны быть `threadId` и `openedBy[stopId]`:
+The map URL must include `threadId` and `openedBy[stopId]`:
 
 ```text
 threadId=<expected thread id>
@@ -94,21 +96,21 @@ openedBy[stopId]=<first prediction target stop id>
 
 ## Response Shape
 
-Это не официальный полный контракт Яндекса. Это accepted shape: набор контейнеров
-и полей, которые текущий parser умеет читать и от которых зависит решение бота.
-Значения профилей не дублировать в новых местах: менять их только в
-`constants.py`.
+This is not the official full Yandex contract. It is the accepted shape: the set of
+containers and fields the current parser can read and the bot decision depends on.
+Do not duplicate profile values in new places: change them only in `constants.py`.
 
 ### `getVehiclePredictionInfo`
 
-Browser capture сохраняет не весь response, а `data` конкретной машины. Если
-в URL есть `id`, он переносится в `vehicleId`; если рядом уже пойман
-`getVehiclesInfoWithRegion`, `threadId` пришивается по `vehicleId`.
+The browser capture stores not the whole response but the `data` of a specific
+vehicle. If the URL has an `id`, it is carried into `vehicleId`; if a
+`getVehiclesInfoWithRegion` was already captured nearby, the `threadId` is stitched
+by `vehicleId`.
 
 Parser: [`vehicle_prediction.py`](../src/route74/sources/yandex/vehicle_prediction.py).
-Smoke: `run_vehicle_prediction_smoke()` и `run_direction_smoke()`.
+Smoke: `run_vehicle_prediction_smoke()` and `run_direction_smoke()`.
 
-Минимальная форма:
+Minimal form:
 
 ```json
 {
@@ -125,7 +127,7 @@ Smoke: `run_vehicle_prediction_smoke()` и `run_direction_smoke()`.
 }
 ```
 
-Parser также принимает одиночную форму:
+The parser also accepts a single form:
 
 ```json
 {
@@ -138,32 +140,32 @@ Parser также принимает одиночную форму:
 }
 ```
 
-Читаемые поля:
+Fields read:
 
-- `threadId` - direction guard. Если совпал с `expected_thread_ids`, прогноз
-  получает `HIGH` confidence. Если не совпал или отсутствует, но stop-level ETA
-  найден именно для целевого stopId, прогноз принимается с `MEDIUM` confidence и
-  `raw_status=vehicle_prediction_thread_fallback`.
-- `stops[].stopId` - должен совпасть с одним из `prediction target stop ids`.
-- `stops[].arrivalEstimation` - строка `HH:MM`, из нее считается ETA.
-- `coordinates` - `[lng, lat]`, диагностическая позиция машины.
-- `vehicleId` - идентификатор для диагностики и связи с `threadId`.
+- `threadId`: the direction guard. If it matches `expected_thread_ids`, the
+  forecast gets `HIGH` confidence. If it is missing or does not match but a
+  stop-level ETA is found for the target stopId, the forecast is accepted with
+  `MEDIUM` confidence and `raw_status=vehicle_prediction_thread_fallback`.
+- `stops[].stopId`: must match one of the `prediction target stop ids`.
+- `stops[].arrivalEstimation`: an `HH:MM` string, the ETA is computed from it.
+- `coordinates`: `[lng, lat]`, the diagnostic vehicle position.
+- `vehicleId`: an id for diagnostics and for linking to `threadId`.
 
-Fail-closed причины:
+Fail-closed reasons:
 
-- без `predictions`/`data.stops`/`stops` -> `EMPTY`;
-- без `threadId` при ожидаемом thread, но с целевым stopId ->
+- no `predictions`/`data.stops`/`stops` -> `EMPTY`;
+- no `threadId` with an expected thread but with the target stopId ->
   `OK/MEDIUM/vehicle_prediction_thread_fallback`;
-- другой `threadId`, но с целевым stopId ->
+- a different `threadId` but with the target stopId ->
   `OK/MEDIUM/vehicle_prediction_thread_fallback`;
-- нет target `stopId` -> `NO_TARGET`.
+- no target `stopId` -> `NO_TARGET`.
 
 ### `getStopInfo`
 
 Parser: [`stop_info.py`](../src/route74/sources/yandex/stop_info.py).
-Smoke: `run_stop_info_smoke()` и `run_stop_info_fallback_smoke()`.
+Smoke: `run_stop_info_smoke()` and `run_stop_info_fallback_smoke()`.
 
-Минимальная форма:
+Minimal form:
 
 ```json
 {
@@ -196,30 +198,30 @@ Smoke: `run_stop_info_smoke()` и `run_stop_info_fallback_smoke()`.
 }
 ```
 
-Читаемые поля:
+Fields read:
 
-- `data.transports` или top-level `transports` - контейнер маршрутов.
-- `transports[].lineId` или пара `name=74`, `type=minibus` - выбор маршрута.
-- `threads[].EssentialStops` - выбор направления по конечной остановке профиля.
-- `BriefSchedule.Events[].Estimated` - единственный stop-level live ETA.
-- `BriefSchedule.Events[].Scheduled` - только расписание, не live ETA.
-- `BriefSchedule.Frequencies` - только интервальная диагностика.
-- `Events[].vehicleId` - только id для диагностического `YandexVehicle`.
+- `data.transports` or top-level `transports`: the route container.
+- `transports[].lineId`, or the pair `name=74`, `type=minibus`: route selection.
+- `threads[].EssentialStops`: direction selection by the profile terminal stop.
+- `BriefSchedule.Events[].Estimated`: the only stop-level live ETA.
+- `BriefSchedule.Events[].Scheduled`: schedule only, not a live ETA.
+- `BriefSchedule.Frequencies`: interval diagnostics only.
+- `Events[].vehicleId`: id for the diagnostic `YandexVehicle` only.
 
-`Estimated.value` может быть Unix timestamp в секундах или миллисекундах.
-Если `value` отсутствует, parser пробует `Estimated.text` в формате `HH:MM`.
+`Estimated.value` can be a Unix timestamp in seconds or milliseconds. If `value` is
+missing, the parser tries `Estimated.text` in `HH:MM` form.
 
 ### `getVehiclesInfoWithRegion`
 
-Этот метод не дает доверенный ETA. Он нужен для координат, количества машин и
-direction diagnostics.
+This method does not give a trusted ETA. It is used for coordinates, vehicle count,
+and direction diagnostics.
 
 Parser: [`parser/forecast.py`](../src/route74/sources/yandex/parser/forecast.py),
 [`parser/vehicle.py`](../src/route74/sources/yandex/parser/vehicle.py),
 [`parser/time_fields.py`](../src/route74/sources/yandex/parser/time_fields.py).
-Smoke: `run_vehicle_parser_smoke()` и `run_direction_smoke()`.
+Smoke: `run_vehicle_parser_smoke()` and `run_direction_smoke()`.
 
-Минимальная форма:
+Minimal form:
 
 ```json
 {
@@ -246,32 +248,32 @@ Smoke: `run_vehicle_parser_smoke()` и `run_direction_smoke()`.
 }
 ```
 
-Читаемые поля:
+Fields read:
 
-- `data.vehicles`, top-level `vehicles` или первый вложенный ключ `vehicles` -
-  контейнер машин.
-- `id`, `vehicleId`, `uid`, `properties.VehicleMetaData.id` или
-  `properties.VehicleMetaData.Transport.id` - vehicle id.
-- `properties.VehicleMetaData.Transport.threadId` или top-level `threadId` -
+- `data.vehicles`, top-level `vehicles`, or the first nested `vehicles` key: the
+  vehicle container.
+- `id`, `vehicleId`, `uid`, `properties.VehicleMetaData.id`, or
+  `properties.VehicleMetaData.Transport.id`: the vehicle id.
+- `properties.VehicleMetaData.Transport.threadId` or top-level `threadId`: the
   direction guard.
-- `lat`/`lng`, `geometry.coordinates`, `features[].geometry.coordinates` или
-  `position` - позиция машины.
-- `age`, `ageSeconds`, `timestamp`, `updatedAt`, `timeNav` - свежесть позиции.
-- `arrivalMinutes`/`eta` могут встретиться, но не становятся ETA: raw vehicle ETA
-  считается недостаточно надежным и используется только как диагностический
-  сигнал.
+- `lat`/`lng`, `geometry.coordinates`, `features[].geometry.coordinates`, or
+  `position`: the vehicle position.
+- `age`, `ageSeconds`, `timestamp`, `updatedAt`, `timeNav`: position freshness.
+- `arrivalMinutes`/`eta` may appear but do not become an ETA: the raw vehicle ETA
+  is treated as not reliable enough and is used only as a diagnostic signal.
 
-Для `HTTP`/`BROWSER` source parser всегда возвращает raw vehicles как
-`COORDINATES_ONLY`: arrival-поля очищаются перед отдачей в decision layer.
+For an `HTTP`/`BROWSER` source the parser always returns raw vehicles as
+`COORDINATES_ONLY`: arrival fields are cleared before handing off to the decision
+layer.
 
 ### `getLine`
 
-`getLine` фиксирует топологию маршрута, а не прогноз.
+`getLine` records route topology, not a forecast.
 
 Parser: [`line.py`](../src/route74/sources/yandex/line.py).
 Smoke: `run_line_smoke()`.
 
-Минимальная форма:
+Minimal form:
 
 ```json
 {
@@ -304,25 +306,26 @@ Smoke: `run_line_smoke()`.
 }
 ```
 
-Читаемые поля:
+Fields read:
 
-- `ThreadMetaData.id` - thread id.
-- `ThreadMetaData.lineId` - line id маршрута 74.
-- `ThreadMetaData.EssentialStops` - крайние остановки направления.
-- stop features `id`, `name`, `coordinates` - наличие target stop и координаты.
-- point features `points` - геометрия для prediction lab.
+- `ThreadMetaData.id`: the thread id.
+- `ThreadMetaData.lineId`: the line id of route 74.
+- `ThreadMetaData.EssentialStops`: the terminal stops of the direction.
+- stop features `id`, `name`, `coordinates`: presence of the target stop and its
+  coordinates.
+- point features `points`: geometry for the prediction lab.
 
-Collector сохраняет `route_geometry` только когда выбранный по `candidate
-stopIds` thread совпадает с ожидаемым `threadId` профиля. Если target stop
-найден только на другом thread, tick получает `route_geometry_status =
-thread_drift`, а `route_geometry_reason` фиксирует `expected`, `selected`,
-`stop`, `active`, `candidates` и первые thread id topology. Такой случай
-считается contract risk и не маскируется координатным fallback.
+The collector saves `route_geometry` only when the thread chosen by `candidate
+stopIds` matches the expected profile `threadId`. If the target stop is found only
+on another thread, the tick gets `route_geometry_status = thread_drift`, and
+`route_geometry_reason` records `expected`, `selected`, `stop`, `active`,
+`candidates`, and the first topology thread ids. This case is treated as a contract
+risk and is not masked by a coordinate fallback.
 
-## Как Перепроверять
+## How to Re-check
 
-После изменения схемы Яндекса, остановки, направления маршрута или констант
-профиля:
+After a change in the Yandex schema, the stop, the route direction, or the profile
+constants:
 
 ```bash
 route74 yandex-dump --profile morning
@@ -331,7 +334,7 @@ route74 yandex-line --dump path/to/dump.json
 ./bin/smoke-yandex
 ```
 
-Дополнительно для качества накопленного history-прогноза:
+Additionally, for the quality of the accumulated history forecast:
 
 ```bash
 route74 forecast-health
@@ -339,5 +342,5 @@ route74 forecast-readiness --window weekday_morning_09_12
 route74 forecast-coverage --window weekday_morning_09_12
 ```
 
-`./bin/check` проверяет общий проект, но не заменяет `./bin/smoke-yandex` после
-изменения stop id, thread id или парсинга masstransit.
+`./bin/check` checks the overall project but does not replace `./bin/smoke-yandex`
+after a change to stop id, thread id, or masstransit parsing.

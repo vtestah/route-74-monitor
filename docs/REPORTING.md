@@ -1,32 +1,32 @@
-# Отчёты И Прогнозный Слой
+# Reports and Forecast Layer
 
-Отчётный слой не заменяет raw-данные Яндекса. Он готовит витрины для
-диагностики, history fallback и качества решения.
+The reporting layer does not replace Yandex raw data. It prepares views for
+diagnostics, history fallback, and decision quality.
 
-## Основные Таблицы
+## Main Tables
 
-1. `yandex_snapshots` — raw факт каждого опроса.
-2. `yandex_vehicle_observations` — нормализованные vehicle rows.
-3. `yandex_forecast_samples` — одна строка прогноза на один poll и профиль.
-4. `report_window_snapshots` — витрина будних окон.
-5. `collector_runs` — журнал запусков сборщика.
-6. `prediction_events` — runtime решения и последующая оценка фактом.
+1. `yandex_snapshots`: the raw fact of each poll.
+2. `yandex_vehicle_observations`: normalized vehicle rows.
+3. `yandex_forecast_samples`: one forecast row per poll and profile.
+4. `report_window_snapshots`: the weekday-window view.
+5. `collector_runs`: the collector run log.
+6. `prediction_events`: runtime decisions and their later evaluation against fact.
 
-## Окна
+## Windows
 
 - `weekday_morning_09_12`
 - `weekday_evening_19_22`
 
-Время считается в `Asia/Novosibirsk`.
+Time is counted in `Asia/Novosibirsk`.
 
-## Правила
+## Rules
 
-- history fallback читает `yandex_forecast_samples`, а не raw vehicle rows;
-- один poll остаётся одним sample, даже если Яндекс показал несколько машин;
-- readiness и coverage считаются отдельно от обычного live runtime;
-- runtime quality хранится рядом, но не меняет source order сам по себе.
+- history fallback reads `yandex_forecast_samples`, not raw vehicle rows;
+- one poll stays one sample, even if Yandex showed several vehicles;
+- readiness and coverage are computed separately from the normal live runtime;
+- runtime quality is stored alongside but does not change the source order by itself.
 
-## Полезные Команды
+## Useful Commands
 
 ```bash
 route74 report-stats --days 30
@@ -38,9 +38,8 @@ route74 prediction-calibration --window weekday_morning_09_12
 route74 watch-state
 ```
 
-## Инварианты
+## Invariants
 
 - Source order: Yandex live -> Yandex history -> no ETA.
-- History не подменяет сильный live ETA.
-- Операторские отчёты не должны тянуть transport-specific детали в доменную
-  логику.
+- History does not replace a strong live ETA.
+- Operator reports must not pull transport-specific details into the domain logic.

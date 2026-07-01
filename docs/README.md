@@ -1,23 +1,22 @@
-# Документация
+# Documentation
 
-Начинай с корневого [README](../README.md), затем открывай раздел по задаче.
+Start with the root [README](../README.md), then open the section you need.
 
-## Основное
+## Core
 
-- [../README.md](../README.md) — запуск web app, UX, Pushover.
-- [../ARCHITECTURE.md](../ARCHITECTURE.md) — слои и границы.
-- [QUALITY.md](./QUALITY.md) — проверки и smoke-команды.
-- [SECURITY.md](./SECURITY.md) — `.env`, секреты, deploy hygiene.
-- [DECISIONS.md](./DECISIONS.md) — зафиксированные решения.
+- [../README.md](../README.md): running the web app, UX, Pushover.
+- [QUALITY.md](./QUALITY.md): checks and smoke commands.
+- [SECURITY.md](./SECURITY.md): `.env`, secrets, deploy hygiene.
+- [DECISIONS.md](./DECISIONS.md): recorded decisions.
 
-## Эксплуатация
+## Operations
 
-- [RUNBOOK.md](./RUNBOOK.md) — диагностика.
-- [SERVER_DEPLOY.md](./SERVER_DEPLOY.md) — запуск на сервере.
-- [DASHBOARD.md](./DASHBOARD.md) — web UI и операторский обзор.
-- [REPORTING.md](./REPORTING.md) — forecast/reporting слой.
+- [RUNBOOK.md](./RUNBOOK.md): diagnostics.
+- [SERVER_DEPLOY.md](./SERVER_DEPLOY.md): running on a server.
+- [DASHBOARD.md](./DASHBOARD.md): web UI and operator overview.
+- [REPORTING.md](./REPORTING.md): forecast and reporting layer.
 
-## Яндекс
+## Yandex
 
-- [YANDEX_CONTRACT.md](./YANDEX_CONTRACT.md) — stop/thread contract.
-- [research.md](./research.md) — исследование источников.
+- [YANDEX_CONTRACT.md](./YANDEX_CONTRACT.md): stop/thread contract.
+- [research.md](./research.md): source research.
